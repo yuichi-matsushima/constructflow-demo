@@ -9,6 +9,7 @@ import {
   FileText,
   CalendarDays,
   HardHat,
+  UserSquare2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/customers", label: "顧客管理", icon: Users },
   { href: "/estimates", label: "見積もり", icon: FileText },
   { href: "/schedule", label: "スケジュール", icon: CalendarDays },
+  { href: "/staff", label: "スタッフ管理", icon: UserSquare2 },
 ];
 
 export function Sidebar() {
