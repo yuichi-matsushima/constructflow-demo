@@ -32,7 +32,7 @@ import { useData } from "@/lib/data-context";
 
 const typeOptions: CustomerType[] = ["個人", "法人"];
 
-type SortKey = "name" | "type" | "registeredAt" | "projectCount";
+type SortKey = "code" | "name" | "type" | "channel" | "registeredAt" | "projectCount";
 
 export default function CustomersPage() {
   const router = useRouter();
@@ -47,10 +47,14 @@ export default function CustomersPage() {
 
   const getSortValue = (c: Customer, key: SortKey) => {
     switch (key) {
+      case "code":
+        return c.customerCode;
       case "name":
         return c.name;
       case "type":
         return c.type;
+      case "channel":
+        return c.channel;
       case "registeredAt":
         return c.registeredAt;
       case "projectCount":
@@ -74,6 +78,7 @@ export default function CustomersPage() {
       const matchesQuery =
         q === "" ||
         c.name.toLowerCase().includes(q) ||
+        c.customerCode.toLowerCase().includes(q) ||
         c.kana.toLowerCase().includes(q) ||
         c.address.toLowerCase().includes(q) ||
         c.email.toLowerCase().includes(q);
@@ -143,11 +148,17 @@ export default function CustomersPage() {
 
           <GridTable>
             <GridHead>
+              <GridHeaderCell sortKey="code" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                コード
+              </GridHeaderCell>
               <GridHeaderCell sortKey="name" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
                 顧客名
               </GridHeaderCell>
               <GridHeaderCell sortKey="type" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="center">
                 区分
+              </GridHeaderCell>
+              <GridHeaderCell sortKey="channel" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="center">
+                流入経路
               </GridHeaderCell>
               <GridHeaderCell>郵便番号</GridHeaderCell>
               <GridHeaderCell>住所</GridHeaderCell>
@@ -162,6 +173,9 @@ export default function CustomersPage() {
             <GridBody>
               {filtered.map((c) => (
                 <GridRow key={c.id} onClick={() => router.push(`/customers/${c.id}`)}>
+                  <GridCell className="font-mono text-xs text-muted-foreground">
+                    {c.customerCode}
+                  </GridCell>
                   <GridCell className="font-medium text-foreground">
                     {c.name}
                     <p className="text-xs font-normal text-muted-foreground">
@@ -171,6 +185,9 @@ export default function CustomersPage() {
                   </GridCell>
                   <GridCell align="center">
                     <Badge variant="outline">{c.type}</Badge>
+                  </GridCell>
+                  <GridCell align="center">
+                    <Badge variant="outline">{c.channel}</Badge>
                   </GridCell>
                   <GridCell>{c.postalCode}</GridCell>
                   <GridCell>{c.address}</GridCell>
@@ -184,7 +201,7 @@ export default function CustomersPage() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={9} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
                     該当する顧客がありません
                   </td>
                 </tr>

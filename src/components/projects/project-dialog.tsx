@@ -22,10 +22,14 @@ import {
 } from "@/components/ui/select";
 import {
   ConstructionType,
+  PaymentStatus,
   Project,
+  ProjectPriority,
   ProjectStatus,
+  StructureType,
   staff,
 } from "@/lib/mock-data";
+import { Textarea } from "@/components/ui/textarea";
 import { useData } from "@/lib/data-context";
 
 const statusOptions: ProjectStatus[] = [
@@ -36,6 +40,9 @@ const statusOptions: ProjectStatus[] = [
   "完了",
 ];
 const typeOptions: ConstructionType[] = ["新築", "リフォーム", "増築", "店舗改装"];
+const priorityOptions: ProjectPriority[] = ["高", "中", "低"];
+const structureOptions: StructureType[] = ["木造", "軽量鉄骨", "鉄骨", "RC"];
+const paymentStatusOptions: PaymentStatus[] = ["未請求", "一部入金", "入金済み"];
 
 function buildForm(project?: Project) {
   return {
@@ -43,6 +50,9 @@ function buildForm(project?: Project) {
     customerId: project?.customerId ?? "",
     status: project?.status ?? ("商談中" as ProjectStatus),
     constructionType: project?.constructionType ?? ("新築" as ConstructionType),
+    priority: project?.priority ?? ("中" as ProjectPriority),
+    structureType: project?.structureType ?? ("木造" as StructureType),
+    paymentStatus: project?.paymentStatus ?? ("未請求" as PaymentStatus),
     budget: project?.budget?.toString() ?? "",
     floorAreaSqm: project?.floorAreaSqm?.toString() ?? "",
     assigneeId: project?.assigneeId ?? "",
@@ -51,6 +61,7 @@ function buildForm(project?: Project) {
     endDate: project?.endDate ?? "",
     postalCode: project?.postalCode ?? "",
     address: project?.address ?? "",
+    remarks: project?.remarks ?? "",
     progress: project?.progress?.toString() ?? "0",
   };
 }
@@ -73,6 +84,9 @@ export function ProjectDialog({ project }: { project?: Project }) {
       customerId: form.customerId,
       status: form.status,
       constructionType: form.constructionType,
+      priority: form.priority,
+      structureType: form.structureType,
+      paymentStatus: form.paymentStatus,
       budget: Number(form.budget) || 0,
       floorAreaSqm: Number(form.floorAreaSqm) || 0,
       assigneeId: form.assigneeId,
@@ -81,6 +95,7 @@ export function ProjectDialog({ project }: { project?: Project }) {
       endDate: form.endDate,
       postalCode: form.postalCode,
       address: form.address,
+      remarks: form.remarks || undefined,
     };
     if (isEdit && project) {
       updateProject(project.id, { ...payload, progress: Number(form.progress) || 0 });
@@ -208,6 +223,72 @@ export function ProjectDialog({ project }: { project?: Project }) {
             </div>
 
             <div className="flex flex-col gap-1.5">
+              <Label>優先度</Label>
+              <Select
+                value={form.priority}
+                onValueChange={(v) =>
+                  setForm({ ...form, priority: (v as ProjectPriority) ?? "中" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {priorityOptions.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>構造</Label>
+              <Select
+                value={form.structureType}
+                onValueChange={(v) =>
+                  setForm({ ...form, structureType: (v as StructureType) ?? "木造" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {structureOptions.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>入金状況</Label>
+              <Select
+                value={form.paymentStatus}
+                onValueChange={(v) =>
+                  setForm({
+                    ...form,
+                    paymentStatus: (v as PaymentStatus) ?? "未請求",
+                  })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {paymentStatusOptions.map((p) => (
+                    <SelectItem key={p} value={p}>
+                      {p}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="p-budget">予算(円)</Label>
               <Input
                 id="p-budget"
@@ -297,6 +378,16 @@ export function ProjectDialog({ project }: { project?: Project }) {
                 required
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
+              />
+            </div>
+
+            <div className="col-span-2 flex flex-col gap-1.5">
+              <Label htmlFor="p-remarks">備考</Label>
+              <Textarea
+                id="p-remarks"
+                rows={2}
+                value={form.remarks}
+                onChange={(e) => setForm({ ...form, remarks: e.target.value })}
               />
             </div>
           </div>

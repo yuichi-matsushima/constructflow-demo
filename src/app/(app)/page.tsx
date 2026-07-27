@@ -147,7 +147,12 @@ export default function DashboardPage() {
                   className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div>
-                    <p className="font-medium">{p.name}</p>
+                    <p className="font-medium">
+                      {p.name}
+                      <span className="ml-2 font-mono text-xs text-muted-foreground">
+                        {p.projectCode}
+                      </span>
+                    </p>
                     <p className="text-xs text-muted-foreground">
                       {customer?.name} ・ 担当: {assignee?.name}
                     </p>

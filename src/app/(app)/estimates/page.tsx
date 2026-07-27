@@ -37,7 +37,7 @@ import { useData } from "@/lib/data-context";
 
 const statusOptions: EstimateStatus[] = ["作成中", "提出済み", "承認", "却下"];
 
-type SortKey = "title" | "project" | "customer" | "amount" | "itemCount" | "status" | "createdAt";
+type SortKey = "code" | "title" | "project" | "customer" | "amount" | "itemCount" | "status" | "createdAt";
 
 export default function EstimatesPage() {
   const router = useRouter();
@@ -54,6 +54,8 @@ export default function EstimatesPage() {
 
   const getSortValue = (e: Estimate, key: SortKey) => {
     switch (key) {
+      case "code":
+        return e.estimateCode;
       case "title":
         return e.title;
       case "project":
@@ -89,6 +91,7 @@ export default function EstimatesPage() {
       const matchesQuery =
         q === "" ||
         e.title.toLowerCase().includes(q) ||
+        e.estimateCode.toLowerCase().includes(q) ||
         project?.name.toLowerCase().includes(q) ||
         customer?.name.toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || e.status === statusFilter;
@@ -159,6 +162,9 @@ export default function EstimatesPage() {
 
           <GridTable>
             <GridHead>
+              <GridHeaderCell sortKey="code" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                コード
+              </GridHeaderCell>
               <GridHeaderCell sortKey="title" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
                 件名
               </GridHeaderCell>
@@ -189,6 +195,9 @@ export default function EstimatesPage() {
                 const customer = customerOf(e.customerId);
                 return (
                   <GridRow key={e.id} onClick={() => project && router.push(`/projects/${project.id}`)}>
+                    <GridCell className="font-mono text-xs text-muted-foreground">
+                      {e.estimateCode}
+                    </GridCell>
                     <GridCell className="font-medium text-foreground">{e.title}</GridCell>
                     <GridCell>{project?.name}</GridCell>
                     <GridCell>{customer?.name}</GridCell>
@@ -211,7 +220,7 @@ export default function EstimatesPage() {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={10} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
                     該当する見積もりがありません
                   </td>
                 </tr>

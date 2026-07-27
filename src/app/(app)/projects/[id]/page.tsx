@@ -22,6 +22,8 @@ import {
   formatCurrency,
   getLogsByProject,
   getStaff,
+  paymentStatusColor,
+  priorityColor,
   statusColor,
   estimateStatusColor,
 } from "@/lib/mock-data";
@@ -81,11 +83,15 @@ export default function ProjectDetailPage() {
           <Badge className={statusColor[project.status]} variant="outline">
             {project.status}
           </Badge>
+          <Badge className={priorityColor[project.priority]} variant="outline">
+            優先度: {project.priority}
+          </Badge>
           <Badge variant="outline">{project.constructionType}</Badge>
           <div className="ml-auto">
             <ProjectDialog project={project} />
           </div>
         </div>
+        <p className="font-mono text-xs text-muted-foreground">{project.projectCode}</p>
         <p className="text-sm text-muted-foreground">
           {project.postalCode} {project.address}
         </p>
@@ -159,8 +165,29 @@ export default function ProjectDetailPage() {
               <CardTitle>基本情報</CardTitle>
             </CardHeader>
             <CardContent>
+              <InfoRow label="案件コード" value={project.projectCode} />
               <InfoRow label="案件ID" value={project.id} />
               <InfoRow label="工事種別" value={project.constructionType} />
+              <InfoRow label="構造" value={project.structureType} />
+              <InfoRow
+                label="優先度"
+                value={
+                  <Badge className={priorityColor[project.priority]} variant="outline">
+                    {project.priority}
+                  </Badge>
+                }
+              />
+              <InfoRow
+                label="入金状況"
+                value={
+                  <Badge
+                    className={paymentStatusColor[project.paymentStatus]}
+                    variant="outline"
+                  >
+                    {project.paymentStatus}
+                  </Badge>
+                }
+              />
               <InfoRow label="契約日" value={project.contractDate} />
               <InfoRow label="着工日" value={project.startDate} />
               <InfoRow label="竣工予定日" value={project.endDate} />
@@ -170,6 +197,9 @@ export default function ProjectDetailPage() {
               <InfoRow label="予算" value={formatCurrency(project.budget)} />
               <InfoRow label="進捗率" value={`${project.progress}%`} />
               <InfoRow label="担当者" value={`${assignee?.name}(${assignee?.employeeId})`} />
+              {project.remarks && (
+                <InfoRow label="備考" value={project.remarks} />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

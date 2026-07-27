@@ -20,58 +20,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Customer, CustomerType } from "@/lib/mock-data";
+import { Customer, CustomerChannel, CustomerType } from "@/lib/mock-data";
 import { useData } from "@/lib/data-context";
 
 const typeOptions: CustomerType[] = ["個人", "法人"];
+const channelOptions: CustomerChannel[] = [
+  "紹介",
+  "Web広告",
+  "チラシ",
+  "展示場",
+  "その他",
+];
 
-const emptyForm = {
-  name: "",
-  kana: "",
-  type: "個人" as CustomerType,
-  postalCode: "",
-  phone: "",
-  email: "",
-  address: "",
-  contactPerson: "",
-};
+function buildForm(customer?: Customer) {
+  return {
+    name: customer?.name ?? "",
+    kana: customer?.kana ?? "",
+    type: customer?.type ?? ("個人" as CustomerType),
+    channel: customer?.channel ?? ("紹介" as CustomerChannel),
+    postalCode: customer?.postalCode ?? "",
+    phone: customer?.phone ?? "",
+    email: customer?.email ?? "",
+    address: customer?.address ?? "",
+    contactPerson: customer?.contactPerson ?? "",
+  };
+}
 
 export function CustomerDialog({ customer }: { customer?: Customer }) {
   const { addCustomer, updateCustomer } = useData();
   const isEdit = Boolean(customer);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(
-    customer
-      ? {
-          name: customer.name,
-          kana: customer.kana,
-          type: customer.type,
-          postalCode: customer.postalCode,
-          phone: customer.phone,
-          email: customer.email,
-          address: customer.address,
-          contactPerson: customer.contactPerson ?? "",
-        }
-      : emptyForm
-  );
+  const [form, setForm] = useState(buildForm(customer));
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
-    if (next && customer) {
-      setForm({
-        name: customer.name,
-        kana: customer.kana,
-        type: customer.type,
-        postalCode: customer.postalCode,
-        phone: customer.phone,
-        email: customer.email,
-        address: customer.address,
-        contactPerson: customer.contactPerson ?? "",
-      });
-    }
-    if (next && !customer) {
-      setForm(emptyForm);
-    }
+    setForm(buildForm(customer));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -145,6 +128,26 @@ export function CustomerDialog({ customer }: { customer?: Customer }) {
                   {typeOptions.map((t) => (
                     <SelectItem key={t} value={t}>
                       {t}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>流入経路</Label>
+              <Select
+                value={form.channel}
+                onValueChange={(v) =>
+                  setForm({ ...form, channel: (v as CustomerChannel) ?? "紹介" })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {channelOptions.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>

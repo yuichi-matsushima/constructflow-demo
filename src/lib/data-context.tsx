@@ -18,15 +18,29 @@ function nextId(prefix: string, ids: string[]): string {
   return `${prefix}-${max + 1}`;
 }
 
+function nextCode(prefix: string, year: number, codes: string[]): string {
+  const yearPrefix = `${prefix}-${year}-`;
+  const max = codes.reduce((m, c) => {
+    if (!c.startsWith(yearPrefix)) return m;
+    const n = parseInt(c.slice(yearPrefix.length), 10);
+    return Number.isFinite(n) && n > m ? n : m;
+  }, 0);
+  return `${yearPrefix}${String(max + 1).padStart(3, "0")}`;
+}
+
 function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export type NewCustomerInput = Omit<Customer, "id" | "registeredAt">;
-export type NewProjectInput = Omit<Project, "id" | "progress" | "phases"> & {
+function yearOf(dateStr: string): number {
+  return new Date(dateStr).getFullYear();
+}
+
+export type NewCustomerInput = Omit<Customer, "id" | "customerCode" | "registeredAt">;
+export type NewProjectInput = Omit<Project, "id" | "projectCode" | "progress" | "phases"> & {
   progress?: number;
 };
-export type NewEstimateInput = Omit<Estimate, "id" | "createdAt">;
+export type NewEstimateInput = Omit<Estimate, "id" | "estimateCode" | "createdAt">;
 
 interface DataContextValue {
   customers: Customer[];
@@ -53,10 +67,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       projects,
       estimates,
       addCustomer: (input) => {
+        const registeredAt = today();
         const newCustomer: Customer = {
           ...input,
           id: nextId("cu", customers.map((c) => c.id)),
-          registeredAt: today(),
+          customerCode: nextCode(
+            "C",
+            yearOf(registeredAt),
+            customers.map((c) => c.customerCode)
+          ),
+          registeredAt,
         };
         setCustomers((prev) => [...prev, newCustomer]);
         return newCustomer;
@@ -70,6 +90,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const newProject: Project = {
           ...input,
           id: nextId("pj", projects.map((p) => p.id)),
+          projectCode: nextCode(
+            "P",
+            yearOf(input.contractDate),
+            projects.map((p) => p.projectCode)
+          ),
           progress: input.progress ?? 0,
           phases: [
             { name: "契約", start: input.contractDate, end: input.contractDate, done: true },
@@ -87,10 +112,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         );
       },
       addEstimate: (input) => {
+        const createdAt = today();
         const newEstimate: Estimate = {
           ...input,
           id: nextId("es", estimates.map((e) => e.id)),
-          createdAt: today(),
+          estimateCode: nextCode(
+            "Q",
+            yearOf(createdAt),
+            estimates.map((e) => e.estimateCode)
+          ),
+          createdAt,
         };
         setEstimates((prev) => [...prev, newEstimate]);
         return newEstimate;

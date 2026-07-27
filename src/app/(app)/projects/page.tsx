@@ -32,6 +32,7 @@ import {
   ConstructionType,
   formatCurrency,
   getStaff,
+  priorityColor,
   Project,
   ProjectStatus,
   statusColor,
@@ -49,9 +50,11 @@ const statusOptions: ProjectStatus[] = [
 const typeOptions: ConstructionType[] = ["新築", "リフォーム", "増築", "店舗改装"];
 
 type SortKey =
+  | "code"
   | "name"
   | "customer"
   | "status"
+  | "priority"
   | "progress"
   | "budget"
   | "floorArea"
@@ -70,14 +73,20 @@ export default function ProjectsPage() {
   const customerNameOf = (customerId: string) =>
     customers.find((c) => c.id === customerId)?.name ?? "";
 
+  const priorityRank: Record<Project["priority"], number> = { 高: 3, 中: 2, 低: 1 };
+
   const getSortValue = (p: Project, key: SortKey) => {
     switch (key) {
+      case "code":
+        return p.projectCode;
       case "name":
         return p.name;
       case "customer":
         return customerNameOf(p.customerId);
       case "status":
         return p.status;
+      case "priority":
+        return priorityRank[p.priority];
       case "progress":
         return p.progress;
       case "budget":
@@ -107,6 +116,7 @@ export default function ProjectsPage() {
       const matchesQuery =
         q === "" ||
         p.name.toLowerCase().includes(q) ||
+        p.projectCode.toLowerCase().includes(q) ||
         p.address.toLowerCase().includes(q) ||
         customerNameOf(p.customerId).toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
@@ -192,6 +202,9 @@ export default function ProjectsPage() {
 
           <GridTable>
             <GridHead>
+              <GridHeaderCell sortKey="code" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                コード
+              </GridHeaderCell>
               <GridHeaderCell sortKey="name" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
                 案件名
               </GridHeaderCell>
@@ -199,6 +212,9 @@ export default function ProjectsPage() {
                 顧客
               </GridHeaderCell>
               <GridHeaderCell align="center">種別</GridHeaderCell>
+              <GridHeaderCell sortKey="priority" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="center">
+                優先度
+              </GridHeaderCell>
               <GridHeaderCell sortKey="status" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="center">
                 ステータス
               </GridHeaderCell>
@@ -223,6 +239,9 @@ export default function ProjectsPage() {
                 const assignee = getStaff(p.assigneeId);
                 return (
                   <GridRow key={p.id} onClick={() => router.push(`/projects/${p.id}`)}>
+                    <GridCell className="font-mono text-xs text-muted-foreground">
+                      {p.projectCode}
+                    </GridCell>
                     <GridCell className="font-medium text-foreground">
                       {p.name}
                       <p className="text-xs font-normal text-muted-foreground">
@@ -232,6 +251,11 @@ export default function ProjectsPage() {
                     <GridCell>{customerNameOf(p.customerId)}</GridCell>
                     <GridCell align="center">
                       <Badge variant="outline">{p.constructionType}</Badge>
+                    </GridCell>
+                    <GridCell align="center">
+                      <Badge className={priorityColor[p.priority]} variant="outline">
+                        {p.priority}
+                      </Badge>
                     </GridCell>
                     <GridCell align="center">
                       <Badge className={statusColor[p.status]} variant="outline">
@@ -255,7 +279,7 @@ export default function ProjectsPage() {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={11} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
                     該当する案件がありません
                   </td>
                 </tr>

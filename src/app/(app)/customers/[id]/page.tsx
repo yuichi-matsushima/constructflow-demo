@@ -68,10 +68,12 @@ export default function CustomerDetailPage() {
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-bold tracking-tight">{customer.name}</h1>
           <Badge variant="outline">{customer.type}</Badge>
+          <Badge variant="outline">{customer.channel}</Badge>
           <div className="ml-auto">
             <CustomerDialog customer={customer} />
           </div>
         </div>
+        <p className="font-mono text-xs text-muted-foreground">{customer.customerCode}</p>
         <p className="text-sm text-muted-foreground">{customer.kana}</p>
       </div>
 
@@ -120,8 +122,10 @@ export default function CustomerDetailPage() {
               <CardTitle>基本情報</CardTitle>
             </CardHeader>
             <CardContent>
+              <InfoRow label="顧客コード" value={customer.customerCode} />
               <InfoRow label="顧客ID" value={customer.id} />
               <InfoRow label="区分" value={customer.type} />
+              <InfoRow label="流入経路" value={customer.channel} />
               <InfoRow label="フリガナ" value={customer.kana} />
               {customer.contactPerson && (
                 <InfoRow label="担当者" value={customer.contactPerson} />
