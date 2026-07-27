@@ -26,36 +26,37 @@ import {
   GridRow,
   GridTable,
 } from "@/components/data-grid/grid-table";
-import {
-  Customer,
-  CustomerType,
-  customers,
-  getProjectsByCustomer,
-} from "@/lib/mock-data";
+import { CustomerDialog } from "@/components/customers/customer-dialog";
+import { Customer, CustomerType } from "@/lib/mock-data";
+import { useData } from "@/lib/data-context";
 
 const typeOptions: CustomerType[] = ["個人", "法人"];
 
 type SortKey = "name" | "type" | "registeredAt" | "projectCount";
 
-function getSortValue(c: Customer, key: SortKey) {
-  switch (key) {
-    case "name":
-      return c.name;
-    case "type":
-      return c.type;
-    case "registeredAt":
-      return c.registeredAt;
-    case "projectCount":
-      return getProjectsByCustomer(c.id).length;
-  }
-}
-
 export default function CustomersPage() {
   const router = useRouter();
+  const { customers, projects } = useData();
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey | null>("registeredAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const projectCountOf = (customerId: string) =>
+    projects.filter((p) => p.customerId === customerId).length;
+
+  const getSortValue = (c: Customer, key: SortKey) => {
+    switch (key) {
+      case "name":
+        return c.name;
+      case "type":
+        return c.type;
+      case "registeredAt":
+        return c.registeredAt;
+      case "projectCount":
+        return projectCountOf(c.id);
+    }
+  };
 
   const handleSort = (key: string) => {
     const k = key as SortKey;
@@ -92,15 +93,19 @@ export default function CustomersPage() {
       });
     }
     return list;
-  }, [query, typeFilter, sortKey, sortDir]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, typeFilter, sortKey, sortDir, customers, projects]);
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">顧客管理</h1>
-        <p className="text-sm text-muted-foreground">
-          全{customers.length}件中 {filtered.length}件表示(サンプルデータ)
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">顧客管理</h1>
+          <p className="text-sm text-muted-foreground">
+            全{customers.length}件中 {filtered.length}件表示(サンプルデータ)
+          </p>
+        </div>
+        <CustomerDialog />
       </div>
 
       <Card>
@@ -118,7 +123,10 @@ export default function CustomersPage() {
                 className="pl-8"
               />
             </div>
-            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter(v ?? "all")}
+            >
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="区分" />
               </SelectTrigger>
@@ -170,9 +178,7 @@ export default function CustomersPage() {
                     {c.phone}
                     <p className="text-xs text-muted-foreground">{c.email}</p>
                   </GridCell>
-                  <GridCell align="right">
-                    {getProjectsByCustomer(c.id).length}件
-                  </GridCell>
+                  <GridCell align="right">{projectCountOf(c.id)}件</GridCell>
                   <GridCell>{c.registeredAt}</GridCell>
                 </GridRow>
               ))}

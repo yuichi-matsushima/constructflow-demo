@@ -27,16 +27,16 @@ import {
   GridRow,
   GridTable,
 } from "@/components/data-grid/grid-table";
+import { ProjectDialog } from "@/components/projects/project-dialog";
 import {
   ConstructionType,
   formatCurrency,
-  getCustomer,
   getStaff,
   Project,
   ProjectStatus,
-  projects,
   statusColor,
 } from "@/lib/mock-data";
+import { useData } from "@/lib/data-context";
 
 const statusOptions: ProjectStatus[] = [
   "商談中",
@@ -58,34 +58,38 @@ type SortKey =
   | "contractDate"
   | "assignee";
 
-function getSortValue(p: Project, key: SortKey) {
-  switch (key) {
-    case "name":
-      return p.name;
-    case "customer":
-      return getCustomer(p.customerId)?.name ?? "";
-    case "status":
-      return p.status;
-    case "progress":
-      return p.progress;
-    case "budget":
-      return p.budget;
-    case "floorArea":
-      return p.floorAreaSqm;
-    case "contractDate":
-      return p.contractDate;
-    case "assignee":
-      return getStaff(p.assigneeId)?.name ?? "";
-  }
-}
-
 export default function ProjectsPage() {
   const router = useRouter();
+  const { projects, customers } = useData();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey | null>("contractDate");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const customerNameOf = (customerId: string) =>
+    customers.find((c) => c.id === customerId)?.name ?? "";
+
+  const getSortValue = (p: Project, key: SortKey) => {
+    switch (key) {
+      case "name":
+        return p.name;
+      case "customer":
+        return customerNameOf(p.customerId);
+      case "status":
+        return p.status;
+      case "progress":
+        return p.progress;
+      case "budget":
+        return p.budget;
+      case "floorArea":
+        return p.floorAreaSqm;
+      case "contractDate":
+        return p.contractDate;
+      case "assignee":
+        return getStaff(p.assigneeId)?.name ?? "";
+    }
+  };
 
   const handleSort = (key: string) => {
     const k = key as SortKey;
@@ -100,12 +104,11 @@ export default function ProjectsPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = projects.filter((p) => {
-      const customer = getCustomer(p.customerId);
       const matchesQuery =
         q === "" ||
         p.name.toLowerCase().includes(q) ||
         p.address.toLowerCase().includes(q) ||
-        customer?.name.toLowerCase().includes(q);
+        customerNameOf(p.customerId).toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || p.status === statusFilter;
       const matchesType = typeFilter === "all" || p.constructionType === typeFilter;
       return matchesQuery && matchesStatus && matchesType;
@@ -123,15 +126,19 @@ export default function ProjectsPage() {
       });
     }
     return list;
-  }, [query, statusFilter, typeFilter, sortKey, sortDir]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, statusFilter, typeFilter, sortKey, sortDir, projects, customers]);
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">案件管理</h1>
-        <p className="text-sm text-muted-foreground">
-          全{projects.length}件中 {filtered.length}件表示(サンプルデータ)
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">案件管理</h1>
+          <p className="text-sm text-muted-foreground">
+            全{projects.length}件中 {filtered.length}件表示(サンプルデータ)
+          </p>
+        </div>
+        <ProjectDialog />
       </div>
 
       <Card>
@@ -149,7 +156,10 @@ export default function ProjectsPage() {
                 className="pl-8"
               />
             </div>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v ?? "all")}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="ステータス" />
               </SelectTrigger>
@@ -162,7 +172,10 @@ export default function ProjectsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter(v ?? "all")}
+            >
               <SelectTrigger className="w-36">
                 <SelectValue placeholder="工事種別" />
               </SelectTrigger>
@@ -207,7 +220,6 @@ export default function ProjectsPage() {
             </GridHead>
             <GridBody>
               {filtered.map((p) => {
-                const customer = getCustomer(p.customerId);
                 const assignee = getStaff(p.assigneeId);
                 return (
                   <GridRow key={p.id} onClick={() => router.push(`/projects/${p.id}`)}>
@@ -217,7 +229,7 @@ export default function ProjectsPage() {
                         {p.postalCode} {p.address}
                       </p>
                     </GridCell>
-                    <GridCell>{customer?.name}</GridCell>
+                    <GridCell>{customerNameOf(p.customerId)}</GridCell>
                     <GridCell align="center">
                       <Badge variant="outline">{p.constructionType}</Badge>
                     </GridCell>

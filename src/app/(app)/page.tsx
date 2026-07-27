@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Building2,
@@ -14,17 +16,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import {
   activities,
-  customers,
-  estimates,
   formatCurrency,
-  getCustomer,
   getStaff,
-  projects,
   statusColor,
 } from "@/lib/mock-data";
+import { useData } from "@/lib/data-context";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 
 export default function DashboardPage() {
+  const { customers, projects, estimates } = useData();
+
   const inProgressCount = projects.filter(
     (p) => p.status === "施工中" || p.status === "設計中"
   ).length;
@@ -137,7 +138,7 @@ export default function DashboardPage() {
         <CardContent>
           <div className="flex flex-col divide-y">
             {recentProjects.map((p) => {
-              const customer = getCustomer(p.customerId);
+              const customer = customers.find((c) => c.id === p.customerId);
               const assignee = getStaff(p.assigneeId);
               return (
                 <Link

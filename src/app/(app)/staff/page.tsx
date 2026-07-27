@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -13,9 +15,11 @@ import {
   GridRow,
   GridTable,
 } from "@/components/data-grid/grid-table";
-import { formatCurrency, getProjectsByStaff, staff } from "@/lib/mock-data";
+import { formatCurrency, staff } from "@/lib/mock-data";
+import { useData } from "@/lib/data-context";
 
 export default function StaffPage() {
+  const { projects } = useData();
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -41,7 +45,9 @@ export default function StaffPage() {
             </GridHead>
             <GridBody>
               {staff.map((s) => {
-                const assignedProjects = getProjectsByStaff(s.id);
+                const assignedProjects = projects.filter(
+                  (p) => p.assigneeId === s.id
+                );
                 const total = assignedProjects.reduce(
                   (sum, p) => sum + p.budget,
                   0

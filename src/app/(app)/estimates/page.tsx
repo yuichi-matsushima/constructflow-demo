@@ -26,45 +26,50 @@ import {
   GridRow,
   GridTable,
 } from "@/components/data-grid/grid-table";
+import { EstimateDialog } from "@/components/estimates/estimate-dialog";
 import {
   Estimate,
   EstimateStatus,
   estimateStatusColor,
-  estimates,
   formatCurrency,
-  getCustomer,
-  getProject,
 } from "@/lib/mock-data";
+import { useData } from "@/lib/data-context";
 
 const statusOptions: EstimateStatus[] = ["作成中", "提出済み", "承認", "却下"];
 
 type SortKey = "title" | "project" | "customer" | "amount" | "itemCount" | "status" | "createdAt";
 
-function getSortValue(e: Estimate, key: SortKey) {
-  switch (key) {
-    case "title":
-      return e.title;
-    case "project":
-      return getProject(e.projectId)?.name ?? "";
-    case "customer":
-      return getCustomer(e.customerId)?.name ?? "";
-    case "amount":
-      return e.amount;
-    case "itemCount":
-      return e.itemCount;
-    case "status":
-      return e.status;
-    case "createdAt":
-      return e.createdAt;
-  }
-}
-
 export default function EstimatesPage() {
   const router = useRouter();
+  const { estimates, projects, customers } = useData();
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey | null>("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const projectOf = (projectId: string) =>
+    projects.find((p) => p.id === projectId);
+  const customerOf = (customerId: string) =>
+    customers.find((c) => c.id === customerId);
+
+  const getSortValue = (e: Estimate, key: SortKey) => {
+    switch (key) {
+      case "title":
+        return e.title;
+      case "project":
+        return projectOf(e.projectId)?.name ?? "";
+      case "customer":
+        return customerOf(e.customerId)?.name ?? "";
+      case "amount":
+        return e.amount;
+      case "itemCount":
+        return e.itemCount;
+      case "status":
+        return e.status;
+      case "createdAt":
+        return e.createdAt;
+    }
+  };
 
   const handleSort = (key: string) => {
     const k = key as SortKey;
@@ -79,8 +84,8 @@ export default function EstimatesPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     let list = estimates.filter((e) => {
-      const project = getProject(e.projectId);
-      const customer = getCustomer(e.customerId);
+      const project = projectOf(e.projectId);
+      const customer = customerOf(e.customerId);
       const matchesQuery =
         q === "" ||
         e.title.toLowerCase().includes(q) ||
@@ -102,17 +107,21 @@ export default function EstimatesPage() {
       });
     }
     return list;
-  }, [query, statusFilter, sortKey, sortDir]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, statusFilter, sortKey, sortDir, estimates, projects, customers]);
 
   const totalAmount = filtered.reduce((sum, e) => sum + e.amount, 0);
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">見積もり</h1>
-        <p className="text-sm text-muted-foreground">
-          全{estimates.length}件中 {filtered.length}件表示 ・ 合計 {formatCurrency(totalAmount)}
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">見積もり</h1>
+          <p className="text-sm text-muted-foreground">
+            全{estimates.length}件中 {filtered.length}件表示 ・ 合計 {formatCurrency(totalAmount)}
+          </p>
+        </div>
+        <EstimateDialog />
       </div>
 
       <Card>
@@ -130,7 +139,10 @@ export default function EstimatesPage() {
                 className="pl-8"
               />
             </div>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v ?? "all")}
+            >
               <SelectTrigger className="w-36">
                 <SelectValue placeholder="ステータス" />
               </SelectTrigger>
@@ -169,11 +181,12 @@ export default function EstimatesPage() {
                 作成日
               </GridHeaderCell>
               <GridHeaderCell>有効期限</GridHeaderCell>
+              <GridHeaderCell align="center">操作</GridHeaderCell>
             </GridHead>
             <GridBody>
               {filtered.map((e) => {
-                const project = getProject(e.projectId);
-                const customer = getCustomer(e.customerId);
+                const project = projectOf(e.projectId);
+                const customer = customerOf(e.customerId);
                 return (
                   <GridRow key={e.id} onClick={() => project && router.push(`/projects/${project.id}`)}>
                     <GridCell className="font-medium text-foreground">{e.title}</GridCell>
@@ -188,12 +201,17 @@ export default function EstimatesPage() {
                     </GridCell>
                     <GridCell>{e.createdAt}</GridCell>
                     <GridCell>{e.validUntil}</GridCell>
+                    <GridCell align="center" className="border-r-0">
+                      <div onClick={(evt) => evt.stopPropagation()}>
+                        <EstimateDialog estimate={e} />
+                      </div>
+                    </GridCell>
                   </GridRow>
                 );
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={9} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
                     該当する見積もりがありません
                   </td>
                 </tr>

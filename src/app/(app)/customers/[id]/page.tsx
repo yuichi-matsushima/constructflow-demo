@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import {
   Card,
@@ -14,19 +16,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import {
-  customers,
-  estimateStatusColor,
-  formatCurrency,
-  getCustomer,
-  getEstimatesByCustomer,
-  getProjectsByCustomer,
-  statusColor,
-} from "@/lib/mock-data";
-
-export function generateStaticParams() {
-  return customers.map((c) => ({ id: c.id }));
-}
+import { CustomerDialog } from "@/components/customers/customer-dialog";
+import { estimateStatusColor, formatCurrency, statusColor } from "@/lib/mock-data";
+import { useData } from "@/lib/data-context";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -37,17 +29,30 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default async function CustomerDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const customer = getCustomer(id);
-  if (!customer) notFound();
+export default function CustomerDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { customers, projects, estimates } = useData();
+  const customer = customers.find((c) => c.id === id);
 
-  const relatedProjects = getProjectsByCustomer(customer.id);
-  const relatedEstimates = getEstimatesByCustomer(customer.id);
+  if (!customer) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Link
+          href="/customers"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          顧客一覧に戻る
+        </Link>
+        <p className="text-sm text-muted-foreground">
+          指定された顧客が見つかりません。
+        </p>
+      </div>
+    );
+  }
+
+  const relatedProjects = projects.filter((p) => p.customerId === customer.id);
+  const relatedEstimates = estimates.filter((e) => e.customerId === customer.id);
   const totalBudget = relatedProjects.reduce((sum, p) => sum + p.budget, 0);
 
   return (
@@ -63,6 +68,9 @@ export default async function CustomerDetailPage({
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-2xl font-bold tracking-tight">{customer.name}</h1>
           <Badge variant="outline">{customer.type}</Badge>
+          <div className="ml-auto">
+            <CustomerDialog customer={customer} />
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">{customer.kana}</p>
       </div>

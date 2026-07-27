@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, CheckCircle2, Circle } from "lucide-react";
 import {
   Card,
@@ -15,21 +17,15 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { ProjectDialog } from "@/components/projects/project-dialog";
 import {
   formatCurrency,
-  getCustomer,
-  getEstimatesByProject,
   getLogsByProject,
-  getProject,
   getStaff,
-  projects,
   statusColor,
   estimateStatusColor,
 } from "@/lib/mock-data";
-
-export function generateStaticParams() {
-  return projects.map((p) => ({ id: p.id }));
-}
+import { useData } from "@/lib/data-context";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -40,18 +36,31 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default async function ProjectDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const project = getProject(id);
-  if (!project) notFound();
+export default function ProjectDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { projects, customers, estimates } = useData();
+  const project = projects.find((p) => p.id === id);
 
-  const customer = getCustomer(project.customerId);
+  if (!project) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Link
+          href="/projects"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          案件一覧に戻る
+        </Link>
+        <p className="text-sm text-muted-foreground">
+          指定された案件が見つかりません。
+        </p>
+      </div>
+    );
+  }
+
+  const customer = customers.find((c) => c.id === project.customerId);
   const assignee = getStaff(project.assigneeId);
-  const relatedEstimates = getEstimatesByProject(project.id);
+  const relatedEstimates = estimates.filter((e) => e.projectId === project.id);
   const logs = getLogsByProject(project.id);
   const estimateTotal = relatedEstimates
     .filter((e) => e.status === "承認")
@@ -73,6 +82,9 @@ export default async function ProjectDetailPage({
             {project.status}
           </Badge>
           <Badge variant="outline">{project.constructionType}</Badge>
+          <div className="ml-auto">
+            <ProjectDialog project={project} />
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
           {project.postalCode} {project.address}

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Card,
@@ -6,13 +8,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getCustomer, projects, statusColor } from "@/lib/mock-data";
+import { statusColor } from "@/lib/mock-data";
+import { useData } from "@/lib/data-context";
 
 function toDays(dateStr: string) {
   return new Date(dateStr).getTime() / (1000 * 60 * 60 * 24);
 }
 
 export default function SchedulePage() {
+  const { projects, customers } = useData();
   const allStarts = projects.flatMap((p) => p.phases.map((ph) => toDays(ph.start)));
   const allEnds = projects.flatMap((p) => p.phases.map((ph) => toDays(ph.end)));
   const minDay = Math.min(...allStarts);
@@ -44,7 +48,7 @@ export default function SchedulePage() {
         <CardContent>
           <div className="flex flex-col gap-6">
             {projects.map((p) => {
-              const customer = getCustomer(p.customerId);
+              const customer = customers.find((c) => c.id === p.customerId);
               return (
                 <div key={p.id} className="flex flex-col gap-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
