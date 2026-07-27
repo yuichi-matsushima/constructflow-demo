@@ -1,5 +1,6 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
+import { ChatWidget } from "@/components/chat/chat-widget";
 import { DataProvider } from "@/lib/data-context";
 
 export default function AppLayout({
@@ -17,6 +18,7 @@ export default function AppLayout({
             {children}
           </main>
         </div>
+        <ChatWidget />
       </div>
     </DataProvider>
   );
