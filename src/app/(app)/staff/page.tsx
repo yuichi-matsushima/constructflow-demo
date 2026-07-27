@@ -1,5 +1,4 @@
-"use client";
-
+import { asc } from "drizzle-orm";
 import {
   Card,
   CardContent,
@@ -16,10 +15,19 @@ import {
   GridTable,
 } from "@/components/data-grid/grid-table";
 import { formatCurrency, staff } from "@/lib/mock-data";
-import { useData } from "@/lib/data-context";
+import { getDb } from "@/db/client";
+import { toProject } from "@/db/mappers";
+import { projects } from "@/db/schema";
 
-export default function StaffPage() {
-  const { projects } = useData();
+export const dynamic = "force-dynamic";
+
+export default async function StaffPage() {
+  const projectRows = await getDb()
+    .select()
+    .from(projects)
+    .orderBy(asc(projects.projectCode));
+  const allProjects = projectRows.map(toProject);
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -45,7 +53,7 @@ export default function StaffPage() {
             </GridHead>
             <GridBody>
               {staff.map((s) => {
-                const assignedProjects = projects.filter(
+                const assignedProjects = allProjects.filter(
                   (p) => p.assigneeId === s.id
                 );
                 const total = assignedProjects.reduce(

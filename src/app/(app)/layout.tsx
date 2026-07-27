@@ -1,6 +1,5 @@
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
-import { DataProvider } from "@/lib/data-context";
 
 export default function AppLayout({
   children,
@@ -8,16 +7,14 @@ export default function AppLayout({
   children: React.ReactNode;
 }) {
   return (
-    <DataProvider>
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <div className="flex flex-1 flex-col">
-          <Header />
-          <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
-            {children}
-          </main>
-        </div>
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex flex-1 flex-col">
+        <Header />
+        <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
+          {children}
+        </main>
       </div>
-    </DataProvider>
+    </div>
   );
 }

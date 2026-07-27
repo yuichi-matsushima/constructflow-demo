@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Customer, CustomerChannel, CustomerType } from "@/lib/mock-data";
-import { useData } from "@/lib/data-context";
+import { createCustomer, updateCustomer } from "@/app/(app)/customers/actions";
 
 const typeOptions: CustomerType[] = ["個人", "法人"];
 const channelOptions: CustomerChannel[] = [
@@ -47,9 +48,10 @@ function buildForm(customer?: Customer) {
 }
 
 export function CustomerDialog({ customer }: { customer?: Customer }) {
-  const { addCustomer, updateCustomer } = useData();
+  const router = useRouter();
   const isEdit = Boolean(customer);
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const [form, setForm] = useState(buildForm(customer));
 
   const handleOpenChange = (next: boolean) => {
@@ -57,18 +59,24 @@ export function CustomerDialog({ customer }: { customer?: Customer }) {
     setForm(buildForm(customer));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
       ...form,
       contactPerson: form.contactPerson || undefined,
     };
-    if (isEdit && customer) {
-      updateCustomer(customer.id, payload);
-    } else {
-      addCustomer(payload);
+    setPending(true);
+    try {
+      if (isEdit && customer) {
+        await updateCustomer(customer.id, payload);
+      } else {
+        await createCustomer(payload);
+      }
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setPending(false);
     }
-    setOpen(false);
   };
 
   return (
@@ -206,7 +214,9 @@ export function CustomerDialog({ customer }: { customer?: Customer }) {
           </div>
 
           <DialogFooter>
-            <Button type="submit">{isEdit ? "保存" : "登録"}</Button>
+            <Button type="submit" disabled={pending}>
+              {isEdit ? "保存" : "登録"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

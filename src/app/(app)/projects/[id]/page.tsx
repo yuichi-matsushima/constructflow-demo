@@ -1,7 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
+import { asc, eq } from "drizzle-orm";
 import { ArrowLeft, CheckCircle2, Circle } from "lucide-react";
 import {
   Card,
@@ -27,7 +26,11 @@ import {
   statusColor,
   estimateStatusColor,
 } from "@/lib/mock-data";
-import { useData } from "@/lib/data-context";
+import { getDb } from "@/db/client";
+import { toCustomer, toEstimate, toProject } from "@/db/mappers";
+import { customers, estimates, projects } from "@/db/schema";
+
+export const dynamic = "force-dynamic";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -38,31 +41,35 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default function ProjectDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const { projects, customers, estimates } = useData();
-  const project = projects.find((p) => p.id === id);
+export default async function ProjectDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const db = getDb();
+  const [projectRow] = await db
+    .select()
+    .from(projects)
+    .where(eq(projects.id, id));
 
-  if (!project) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Link
-          href="/projects"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          案件一覧に戻る
-        </Link>
-        <p className="text-sm text-muted-foreground">
-          指定された案件が見つかりません。
-        </p>
-      </div>
-    );
+  if (!projectRow) {
+    notFound();
   }
 
-  const customer = customers.find((c) => c.id === project.customerId);
+  const project = toProject(projectRow);
+  const [customerRows, estimateRows] = await Promise.all([
+    db.select().from(customers).orderBy(asc(customers.customerCode)),
+    db
+      .select()
+      .from(estimates)
+      .where(eq(estimates.projectId, project.id))
+      .orderBy(asc(estimates.estimateCode)),
+  ]);
+  const allCustomers = customerRows.map(toCustomer);
+  const customer = allCustomers.find((c) => c.id === project.customerId);
   const assignee = getStaff(project.assigneeId);
-  const relatedEstimates = estimates.filter((e) => e.projectId === project.id);
+  const relatedEstimates = estimateRows.map(toEstimate);
   const logs = getLogsByProject(project.id);
   const estimateTotal = relatedEstimates
     .filter((e) => e.status === "承認")
@@ -88,7 +95,7 @@ export default function ProjectDetailPage() {
           </Badge>
           <Badge variant="outline">{project.constructionType}</Badge>
           <div className="ml-auto">
-            <ProjectDialog project={project} />
+            <ProjectDialog project={project} customers={allCustomers} />
           </div>
         </div>
         <p className="font-mono text-xs text-muted-foreground">{project.projectCode}</p>

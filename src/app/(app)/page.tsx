@@ -1,6 +1,5 @@
-"use client";
-
 import Link from "next/link";
+import { asc } from "drizzle-orm";
 import {
   Building2,
   Users,
@@ -20,21 +19,33 @@ import {
   getStaff,
   statusColor,
 } from "@/lib/mock-data";
-import { useData } from "@/lib/data-context";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
+import { getDb } from "@/db/client";
+import { toCustomer, toEstimate, toProject } from "@/db/mappers";
+import { customers, estimates, projects } from "@/db/schema";
 
-export default function DashboardPage() {
-  const { customers, projects, estimates } = useData();
+export const dynamic = "force-dynamic";
 
-  const inProgressCount = projects.filter(
+export default async function DashboardPage() {
+  const db = getDb();
+  const [customerRows, projectRows, estimateRows] = await Promise.all([
+    db.select().from(customers).orderBy(asc(customers.customerCode)),
+    db.select().from(projects).orderBy(asc(projects.projectCode)),
+    db.select().from(estimates).orderBy(asc(estimates.estimateCode)),
+  ]);
+  const allCustomers = customerRows.map(toCustomer);
+  const allProjects = projectRows.map(toProject);
+  const allEstimates = estimateRows.map(toEstimate);
+
+  const inProgressCount = allProjects.filter(
     (p) => p.status === "施工中" || p.status === "設計中"
   ).length;
-  const pendingEstimates = estimates.filter(
+  const pendingEstimates = allEstimates.filter(
     (e) => e.status === "提出済み" || e.status === "作成中"
   ).length;
-  const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
+  const totalBudget = allProjects.reduce((sum, p) => sum + p.budget, 0);
 
-  const recentProjects = [...projects]
+  const recentProjects = [...allProjects]
     .sort((a, b) => (a.startDate < b.startDate ? 1 : -1))
     .slice(0, 5);
 
@@ -57,7 +68,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{inProgressCount}件</div>
-            <p className="text-xs text-muted-foreground">全{projects.length}件中</p>
+            <p className="text-xs text-muted-foreground">全{allProjects.length}件中</p>
           </CardContent>
         </Card>
         <Card>
@@ -68,7 +79,7 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{customers.length}件</div>
+            <div className="text-2xl font-bold">{allCustomers.length}件</div>
             <p className="text-xs text-muted-foreground">個人・法人合計</p>
           </CardContent>
         </Card>
@@ -138,7 +149,7 @@ export default function DashboardPage() {
         <CardContent>
           <div className="flex flex-col divide-y">
             {recentProjects.map((p) => {
-              const customer = customers.find((c) => c.id === p.customerId);
+              const customer = allCustomers.find((c) => c.id === p.customerId);
               const assignee = getStaff(p.assigneeId);
               return (
                 <Link

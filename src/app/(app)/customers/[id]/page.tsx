@@ -1,7 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { notFound } from "next/navigation";
+import { asc, eq } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
 import {
   Card,
@@ -18,7 +17,11 @@ import {
 } from "@/components/ui/tabs";
 import { CustomerDialog } from "@/components/customers/customer-dialog";
 import { estimateStatusColor, formatCurrency, statusColor } from "@/lib/mock-data";
-import { useData } from "@/lib/data-context";
+import { getDb } from "@/db/client";
+import { toCustomer, toEstimate, toProject } from "@/db/mappers";
+import { customers, estimates, projects } from "@/db/schema";
+
+export const dynamic = "force-dynamic";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -29,30 +32,37 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export default function CustomerDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const { customers, projects, estimates } = useData();
-  const customer = customers.find((c) => c.id === id);
+export default async function CustomerDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const db = getDb();
+  const [customerRow] = await db
+    .select()
+    .from(customers)
+    .where(eq(customers.id, id));
 
-  if (!customer) {
-    return (
-      <div className="flex flex-col gap-4">
-        <Link
-          href="/customers"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:underline"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          顧客一覧に戻る
-        </Link>
-        <p className="text-sm text-muted-foreground">
-          指定された顧客が見つかりません。
-        </p>
-      </div>
-    );
+  if (!customerRow) {
+    notFound();
   }
 
-  const relatedProjects = projects.filter((p) => p.customerId === customer.id);
-  const relatedEstimates = estimates.filter((e) => e.customerId === customer.id);
+  const customer = toCustomer(customerRow);
+  const [projectRows, estimateRows] = await Promise.all([
+    db
+      .select()
+      .from(projects)
+      .where(eq(projects.customerId, customer.id))
+      .orderBy(asc(projects.projectCode)),
+    db
+      .select()
+      .from(estimates)
+      .where(eq(estimates.customerId, customer.id))
+      .orderBy(asc(estimates.estimateCode)),
+  ]);
+  const relatedProjects = projectRows.map(toProject);
+  const relatedEstimates = estimateRows.map(toEstimate);
   const totalBudget = relatedProjects.reduce((sum, p) => sum + p.budget, 0);
 
   return (

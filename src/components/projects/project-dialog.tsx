@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import {
   ConstructionType,
+  Customer,
   PaymentStatus,
   Project,
   ProjectPriority,
@@ -30,7 +32,7 @@ import {
   staff,
 } from "@/lib/mock-data";
 import { Textarea } from "@/components/ui/textarea";
-import { useData } from "@/lib/data-context";
+import { createProject, updateProject } from "@/app/(app)/projects/actions";
 
 const statusOptions: ProjectStatus[] = [
   "商談中",
@@ -66,10 +68,17 @@ function buildForm(project?: Project) {
   };
 }
 
-export function ProjectDialog({ project }: { project?: Project }) {
-  const { customers, addProject, updateProject } = useData();
+export function ProjectDialog({
+  project,
+  customers,
+}: {
+  project?: Project;
+  customers: Customer[];
+}) {
+  const router = useRouter();
   const isEdit = Boolean(project);
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const [form, setForm] = useState(buildForm(project));
 
   const handleOpenChange = (next: boolean) => {
@@ -77,7 +86,7 @@ export function ProjectDialog({ project }: { project?: Project }) {
     setForm(buildForm(project));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
       name: form.name,
@@ -97,12 +106,21 @@ export function ProjectDialog({ project }: { project?: Project }) {
       address: form.address,
       remarks: form.remarks || undefined,
     };
-    if (isEdit && project) {
-      updateProject(project.id, { ...payload, progress: Number(form.progress) || 0 });
-    } else {
-      addProject(payload);
+    setPending(true);
+    try {
+      if (isEdit && project) {
+        await updateProject(project.id, {
+          ...payload,
+          progress: Number(form.progress) || 0,
+        });
+      } else {
+        await createProject(payload);
+      }
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setPending(false);
     }
-    setOpen(false);
   };
 
   return (
@@ -393,7 +411,9 @@ export function ProjectDialog({ project }: { project?: Project }) {
           </div>
 
           <DialogFooter>
-            <Button type="submit">{isEdit ? "保存" : "登録"}</Button>
+            <Button type="submit" disabled={pending}>
+              {isEdit ? "保存" : "登録"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

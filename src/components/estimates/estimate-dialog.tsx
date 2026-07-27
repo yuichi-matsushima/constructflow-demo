@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,8 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Estimate, EstimateStatus } from "@/lib/mock-data";
-import { useData } from "@/lib/data-context";
+import { Estimate, EstimateStatus, Project } from "@/lib/mock-data";
+import { createEstimate, updateEstimate } from "@/app/(app)/estimates/actions";
 
 const statusOptions: EstimateStatus[] = ["作成中", "提出済み", "承認", "却下"];
 
@@ -39,13 +40,16 @@ function buildForm(estimate?: Estimate, defaultProjectId?: string) {
 export function EstimateDialog({
   estimate,
   defaultProjectId,
+  projects,
 }: {
   estimate?: Estimate;
   defaultProjectId?: string;
+  projects: Project[];
 }) {
-  const { projects, addEstimate, updateEstimate } = useData();
+  const router = useRouter();
   const isEdit = Boolean(estimate);
   const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
   const [form, setForm] = useState(buildForm(estimate, defaultProjectId));
 
   const handleOpenChange = (next: boolean) => {
@@ -53,13 +57,11 @@ export function EstimateDialog({
     setForm(buildForm(estimate, defaultProjectId));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const project = projects.find((p) => p.id === form.projectId);
-    if (!project) return;
+    if (!form.projectId) return;
     const payload = {
       projectId: form.projectId,
-      customerId: project.customerId,
       title: form.title,
       amount: Number(form.amount) || 0,
       itemCount: Number(form.itemCount) || 0,
@@ -67,12 +69,18 @@ export function EstimateDialog({
       validUntil: form.validUntil,
       taxIncluded: true,
     };
-    if (isEdit && estimate) {
-      updateEstimate(estimate.id, payload);
-    } else {
-      addEstimate(payload);
+    setPending(true);
+    try {
+      if (isEdit && estimate) {
+        await updateEstimate(estimate.id, payload);
+      } else {
+        await createEstimate(payload);
+      }
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setPending(false);
     }
-    setOpen(false);
   };
 
   return (
@@ -185,7 +193,7 @@ export function EstimateDialog({
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={!form.projectId}>
+            <Button type="submit" disabled={!form.projectId || pending}>
               {isEdit ? "保存" : "作成"}
             </Button>
           </DialogFooter>

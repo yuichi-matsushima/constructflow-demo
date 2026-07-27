@@ -1,6 +1,5 @@
-"use client";
-
 import Link from "next/link";
+import { asc } from "drizzle-orm";
 import {
   Card,
   CardContent,
@@ -9,16 +8,27 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { statusColor } from "@/lib/mock-data";
-import { useData } from "@/lib/data-context";
+import { getDb } from "@/db/client";
+import { toCustomer, toProject } from "@/db/mappers";
+import { customers, projects } from "@/db/schema";
+
+export const dynamic = "force-dynamic";
 
 function toDays(dateStr: string) {
   return new Date(dateStr).getTime() / (1000 * 60 * 60 * 24);
 }
 
-export default function SchedulePage() {
-  const { projects, customers } = useData();
-  const allStarts = projects.flatMap((p) => p.phases.map((ph) => toDays(ph.start)));
-  const allEnds = projects.flatMap((p) => p.phases.map((ph) => toDays(ph.end)));
+export default async function SchedulePage() {
+  const db = getDb();
+  const [projectRows, customerRows] = await Promise.all([
+    db.select().from(projects).orderBy(asc(projects.projectCode)),
+    db.select().from(customers).orderBy(asc(customers.customerCode)),
+  ]);
+  const allProjects = projectRows.map(toProject);
+  const allCustomers = customerRows.map(toCustomer);
+
+  const allStarts = allProjects.flatMap((p) => p.phases.map((ph) => toDays(ph.start)));
+  const allEnds = allProjects.flatMap((p) => p.phases.map((ph) => toDays(ph.end)));
   const minDay = Math.min(...allStarts);
   const maxDay = Math.max(...allEnds);
   const totalSpan = maxDay - minDay;
@@ -47,8 +57,8 @@ export default function SchedulePage() {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col gap-6">
-            {projects.map((p) => {
-              const customer = customers.find((c) => c.id === p.customerId);
+            {allProjects.map((p) => {
+              const customer = allCustomers.find((c) => c.id === p.customerId);
               return (
                 <div key={p.id} className="flex flex-col gap-2">
                   <div className="flex flex-wrap items-center justify-between gap-2">
