@@ -31,7 +31,7 @@ export default async function StaffPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">スタッフ管理</h1>
+        <h1 className="text-2xl font-bold tracking-tight font-heading">スタッフ管理</h1>
         <p className="text-sm text-muted-foreground">
           全{staff.length}名(サンプルデータ)
         </p>

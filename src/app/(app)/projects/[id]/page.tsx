@@ -86,7 +86,7 @@ export default async function ProjectDetailPage({
           案件一覧に戻る
         </Link>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{project.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight font-heading">{project.name}</h1>
           <Badge className={statusColor[project.status]} variant="outline">
             {project.status}
           </Badge>

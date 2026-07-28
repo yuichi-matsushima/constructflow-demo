@@ -76,7 +76,7 @@ export default async function CustomerDetailPage({
           顧客一覧に戻る
         </Link>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{customer.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight font-heading">{customer.name}</h1>
           <Badge variant="outline">{customer.type}</Badge>
           <Badge variant="outline">{customer.channel}</Badge>
           <div className="ml-auto">
