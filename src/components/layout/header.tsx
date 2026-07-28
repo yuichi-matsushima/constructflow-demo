@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { notifications } from "@/lib/mock-data";
+import { GlobalSearch } from "@/components/search/global-search";
 
 export function Header() {
   const router = useRouter();
@@ -24,6 +25,7 @@ export function Header() {
         <p className="text-sm text-muted-foreground">工務店向け業務管理デモ</p>
       </div>
       <div className="flex items-center gap-2">
+        <GlobalSearch />
         <DropdownMenu>
           <DropdownMenuTrigger className="relative flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent">
             <Bell className="h-4 w-4" />
