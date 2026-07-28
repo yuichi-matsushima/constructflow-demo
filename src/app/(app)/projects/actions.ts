@@ -38,7 +38,6 @@ function revalidateProjectPaths(id: string) {
   revalidatePath("/projects");
   revalidatePath(`/projects/${id}`);
   revalidatePath("/");
-  revalidatePath("/schedule");
   revalidatePath("/staff");
 }
 
