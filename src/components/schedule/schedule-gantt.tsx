@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,13 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Customer,
-  Project,
-  ProjectPhase,
-  ProjectStatus,
-  statusColor,
-} from "@/lib/mock-data";
+import { Customer, Project, ProjectStatus, statusColor } from "@/lib/mock-data";
 
 const statusOptions: ProjectStatus[] = [
   "商談中",
@@ -35,17 +30,20 @@ const statusOptions: ProjectStatus[] = [
   "完了",
 ];
 
-const phaseColor: Record<string, string> = {
-  商談: "bg-slate-400",
-  契約: "bg-blue-500",
-  設計: "bg-violet-500",
-  着工: "bg-amber-500",
-  上棟: "bg-orange-500",
-  躯体工事: "bg-rose-500",
-  内装仕上げ: "bg-cyan-500",
-  引き渡し: "bg-emerald-500",
+const statusBarColor: Record<ProjectStatus, string> = {
+  商談中: "bg-slate-400",
+  契約済み: "bg-blue-500",
+  設計中: "bg-amber-500",
+  施工中: "bg-orange-500",
+  完了: "bg-emerald-500",
 };
-const fallbackPhaseColor = "bg-zinc-400";
+const statusTrackColor: Record<ProjectStatus, string> = {
+  商談中: "bg-slate-100 dark:bg-slate-900",
+  契約済み: "bg-blue-50 dark:bg-blue-950",
+  設計中: "bg-amber-50 dark:bg-amber-950",
+  施工中: "bg-orange-50 dark:bg-orange-950",
+  完了: "bg-emerald-50 dark:bg-emerald-950",
+};
 
 function toDays(dateStr: string) {
   return new Date(dateStr).getTime() / (1000 * 60 * 60 * 24);
@@ -60,7 +58,7 @@ function addMonths(date: Date, n: number) {
   return new Date(date.getFullYear(), date.getMonth() + n, 1);
 }
 
-const LABEL_WIDTH = "260px";
+const LABEL_WIDTH = "220px";
 
 export function ScheduleGantt({
   projects,
@@ -71,6 +69,7 @@ export function ScheduleGantt({
 }) {
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const customerNameOf = (customerId: string) =>
     customers.find((c) => c.id === customerId)?.name ?? "";
@@ -85,19 +84,19 @@ export function ScheduleGantt({
           p.projectCode.toLowerCase().includes(q) ||
           customerNameOf(p.customerId).toLowerCase().includes(q);
         const matchesStatus = statusFilter === "all" || p.status === statusFilter;
-        return matchesQuery && matchesStatus;
+        const matchesCompleted = showCompleted || p.status !== "完了";
+        return matchesQuery && matchesStatus && matchesCompleted;
       })
       .sort((a, b) => (a.startDate < b.startDate ? -1 : 1));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, statusFilter, projects, customers]);
+  }, [query, statusFilter, showCompleted, projects, customers]);
 
-  const allPhases: ProjectPhase[] = filtered.flatMap((p) => p.phases);
-  const hasData = allPhases.length > 0;
+  const hasData = filtered.length > 0;
   const minDay = hasData
-    ? Math.min(...allPhases.map((ph) => toDays(ph.start)))
+    ? Math.min(...filtered.map((p) => toDays(p.startDate)))
     : toDays(new Date().toISOString().slice(0, 10));
   const maxDay = hasData
-    ? Math.max(...allPhases.map((ph) => toDays(ph.end)))
+    ? Math.max(...filtered.map((p) => toDays(p.endDate)))
     : minDay + 30;
   const totalSpan = Math.max(maxDay - minDay, 1);
 
@@ -117,14 +116,10 @@ export function ScheduleGantt({
     }
     return result;
   }, [minDay, maxDay, hasData]);
+  const monthStep = months.length > 14 ? 2 : 1;
 
   const todayDay = toDays(new Date().toISOString().slice(0, 10));
   const showToday = todayDay >= minDay && todayDay <= maxDay;
-
-  const usedPhaseNames = Array.from(
-    new Set(filtered.flatMap((p) => p.phases.map((ph) => ph.name)))
-  );
-
   const rowCount = filtered.length;
 
   return (
@@ -132,13 +127,13 @@ export function ScheduleGantt({
       <div>
         <h1 className="text-2xl font-bold tracking-tight font-heading">スケジュール</h1>
         <p className="text-sm text-muted-foreground">
-          全案件の工程スケジュール(サンプルデータ)
+          全案件の工期を一覧できます(サンプルデータ)
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>案件別 工程ガントチャート</CardTitle>
+          <CardTitle>案件スケジュール</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -167,36 +162,34 @@ export function ScheduleGantt({
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-xs text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Checkbox
+                id="show-completed"
+                checked={showCompleted}
+                onCheckedChange={(v) => setShowCompleted(v === true)}
+              />
+              <Label htmlFor="show-completed" className="text-sm font-normal text-muted-foreground">
+                完了案件も表示
+              </Label>
+            </div>
+            <span className="ml-auto text-xs text-muted-foreground">
               {filtered.length}件表示
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 rounded-md border bg-muted/30 px-3 py-2">
-            {usedPhaseNames.map((name) => (
-              <div key={name} className="flex items-center gap-1.5 text-xs">
-                <span
-                  className={`h-2.5 w-2.5 rounded-sm ${phaseColor[name] ?? fallbackPhaseColor}`}
-                />
-                {name}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+            {statusOptions.map((s) => (
+              <div key={s} className="flex items-center gap-1.5">
+                <span className={`h-2.5 w-2.5 rounded-sm ${statusBarColor[s]}`} />
+                {s}
               </div>
             ))}
             {showToday && (
-              <div className="flex items-center gap-1.5 text-xs">
+              <div className="flex items-center gap-1.5">
                 <span className="h-2.5 w-0.5 bg-red-500" />
                 本日
               </div>
             )}
-            <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <span className="h-2.5 w-2.5 rounded-sm bg-slate-400 opacity-100" />
-                完了済み工程
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="h-2.5 w-2.5 rounded-sm bg-slate-400 opacity-50" />
-                未完了工程
-              </span>
-            </div>
           </div>
 
           {!hasData ? (
@@ -206,7 +199,7 @@ export function ScheduleGantt({
           ) : (
             <div className="overflow-x-auto">
               <div
-                className="grid min-w-[900px] gap-y-1"
+                className="grid min-w-[760px] gap-y-2"
                 style={{ gridTemplateColumns: `${LABEL_WIDTH} 1fr` }}
               >
                 <div className="sticky left-0 z-20 flex items-end bg-background pb-1.5 text-xs font-medium text-muted-foreground">
@@ -214,11 +207,12 @@ export function ScheduleGantt({
                 </div>
                 <div className="relative h-6">
                   {months.map((m, i) => {
+                    if (i % monthStep !== 0 && i !== 0) return null;
                     const day = toDays(m.toISOString());
                     return (
                       <div
                         key={i}
-                        className="absolute top-0 h-full border-l border-border/70 pl-1 text-[11px] text-muted-foreground"
+                        className="absolute top-0 h-full border-l border-border/60 pl-1 text-[11px] text-muted-foreground"
                         style={{ left: `${pctOf(day)}%` }}
                       >
                         {i === 0 || m.getMonth() === 0
@@ -234,11 +228,12 @@ export function ScheduleGantt({
                   style={{ gridRow: `2 / ${rowCount + 2}` }}
                 >
                   {months.map((m, i) => {
+                    if (i % monthStep !== 0 && i !== 0) return null;
                     const day = toDays(m.toISOString());
                     return (
                       <div
                         key={i}
-                        className="pointer-events-none absolute top-0 h-full border-l border-border/50"
+                        className="pointer-events-none absolute top-0 h-full border-l border-border/30"
                         style={{ left: `${pctOf(day)}%` }}
                       />
                     );
@@ -252,51 +247,33 @@ export function ScheduleGantt({
                 </div>
 
                 {filtered.map((p) => {
-                  const customer = customers.find((c) => c.id === p.customerId);
+                  const start = toDays(p.startDate);
+                  const end = toDays(p.endDate);
+                  const left = pctOf(start);
+                  const width = Math.max(((end - start) / totalSpan) * 100, 1.2);
                   return (
                     <Fragment key={p.id}>
                       <Link
                         href={`/projects/${p.id}`}
-                        className="sticky left-0 z-10 flex flex-col justify-center gap-0.5 border-r bg-background py-1.5 pr-3 hover:bg-accent/40"
+                        className="sticky left-0 z-10 flex flex-col justify-center gap-0.5 border-r bg-background py-1 pr-3 hover:bg-accent/40"
                       >
                         <span className="truncate text-sm font-medium">
                           {p.name}
                         </span>
-                        <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                          <span className="font-mono">{p.projectCode}</span>
-                          <span className="truncate">{customer?.name}</span>
+                        <span className="truncate text-[11px] text-muted-foreground">
+                          {customerNameOf(p.customerId)}
                         </span>
-                        <div className="flex items-center gap-1.5">
-                          <Badge
-                            className={statusColor[p.status]}
-                            variant="outline"
-                          >
-                            {p.status}
-                          </Badge>
-                          <Progress value={p.progress} className="h-1 w-12" />
-                        </div>
                       </Link>
-                      <div className="relative flex items-center py-1.5">
-                        <div className="relative h-6 w-full rounded-md bg-muted">
-                          {p.phases.map((phase) => {
-                            const start = toDays(phase.start);
-                            const end = toDays(phase.end);
-                            const left = pctOf(start);
-                            const width = Math.max(
-                              ((end - start) / totalSpan) * 100,
-                              0.6
-                            );
-                            return (
-                              <div
-                                key={phase.name}
-                                title={`${phase.name}: ${phase.start} 〜 ${phase.end}${phase.done ? "(完了)" : ""}`}
-                                className={`absolute top-0.5 h-5 rounded ${
-                                  phaseColor[phase.name] ?? fallbackPhaseColor
-                                } ${phase.done ? "opacity-100" : "opacity-50"}`}
-                                style={{ left: `${left}%`, width: `${width}%` }}
-                              />
-                            );
-                          })}
+                      <div className="relative flex items-center py-1">
+                        <div
+                          title={`${p.name}: ${p.startDate} 〜 ${p.endDate}(進捗${p.progress}%)`}
+                          className={`absolute top-0 h-6 rounded-md ${statusTrackColor[p.status]}`}
+                          style={{ left: `${left}%`, width: `${width}%` }}
+                        >
+                          <div
+                            className={`h-full rounded-md ${statusBarColor[p.status]}`}
+                            style={{ width: `${p.status === "完了" ? 100 : p.progress}%` }}
+                          />
                         </div>
                       </div>
                     </Fragment>
