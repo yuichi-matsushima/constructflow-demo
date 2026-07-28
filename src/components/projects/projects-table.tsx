@@ -28,6 +28,13 @@ import {
   GridTable,
 } from "@/components/data-grid/grid-table";
 import { ProjectDialog } from "@/components/projects/project-dialog";
+import { KanbanBoard } from "@/components/projects/kanban-board";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import {
   ConstructionType,
   Customer,
@@ -156,143 +163,166 @@ export function ProjectsTable({
         <ProjectDialog customers={customers} />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>案件一覧</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative w-full max-w-xs">
-              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="案件名・顧客名・住所で検索"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="pl-8"
-              />
-            </div>
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v ?? "all")}
-            >
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="ステータス" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全ステータス</SelectItem>
-                {statusOptions.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={typeFilter}
-              onValueChange={(v) => setTypeFilter(v ?? "all")}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="工事種別" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全工事種別</SelectItem>
-                {typeOptions.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {t}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <Tabs defaultValue="list">
+        <TabsList>
+          <TabsTrigger value="list">一覧</TabsTrigger>
+          <TabsTrigger value="board">ボード</TabsTrigger>
+        </TabsList>
 
-          <GridTable>
-            <GridHead>
-              <GridHeaderCell sortKey="code" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
-                コード
-              </GridHeaderCell>
-              <GridHeaderCell sortKey="name" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
-                案件名
-              </GridHeaderCell>
-              <GridHeaderCell sortKey="customer" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
-                顧客
-              </GridHeaderCell>
-              <GridHeaderCell align="center">種別</GridHeaderCell>
-              <GridHeaderCell sortKey="priority" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="center">
-                優先度
-              </GridHeaderCell>
-              <GridHeaderCell sortKey="status" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="center">
-                ステータス
-              </GridHeaderCell>
-              <GridHeaderCell sortKey="progress" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
-                進捗
-              </GridHeaderCell>
-              <GridHeaderCell sortKey="budget" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="right">
-                予算
-              </GridHeaderCell>
-              <GridHeaderCell sortKey="floorArea" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="right">
-                延床面積
-              </GridHeaderCell>
-              <GridHeaderCell sortKey="contractDate" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
-                契約日
-              </GridHeaderCell>
-              <GridHeaderCell sortKey="assignee" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
-                担当
-              </GridHeaderCell>
-            </GridHead>
-            <GridBody>
-              {filtered.map((p) => {
-                const assignee = getStaff(p.assigneeId);
-                return (
-                  <GridRow key={p.id} onClick={() => router.push(`/projects/${p.id}`)}>
-                    <GridCell className="font-mono text-xs text-muted-foreground">
-                      {p.projectCode}
-                    </GridCell>
-                    <GridCell className="font-medium text-foreground">
-                      {p.name}
-                      <p className="text-xs font-normal text-muted-foreground">
-                        {p.postalCode} {p.address}
-                      </p>
-                    </GridCell>
-                    <GridCell>{customerNameOf(p.customerId)}</GridCell>
-                    <GridCell align="center">
-                      <Badge variant="outline">{p.constructionType}</Badge>
-                    </GridCell>
-                    <GridCell align="center">
-                      <Badge className={priorityColor[p.priority]} variant="outline">
-                        {p.priority}
-                      </Badge>
-                    </GridCell>
-                    <GridCell align="center">
-                      <Badge className={statusColor[p.status]} variant="outline">
-                        {p.status}
-                      </Badge>
-                    </GridCell>
-                    <GridCell className="w-32">
-                      <div className="flex items-center gap-2">
-                        <Progress value={p.progress} className="h-1.5" />
-                        <span className="text-xs text-muted-foreground">
-                          {p.progress}%
-                        </span>
-                      </div>
-                    </GridCell>
-                    <GridCell align="right">{formatCurrency(p.budget)}</GridCell>
-                    <GridCell align="right">{p.floorAreaSqm.toFixed(1)}m²</GridCell>
-                    <GridCell>{p.contractDate}</GridCell>
-                    <GridCell>{assignee?.name}</GridCell>
-                  </GridRow>
-                );
-              })}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={11} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
-                    該当する案件がありません
-                  </td>
-                </tr>
-              )}
-            </GridBody>
-          </GridTable>
-        </CardContent>
-      </Card>
+        <TabsContent value="list">
+          <Card>
+            <CardHeader>
+              <CardTitle>案件一覧</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative w-full max-w-xs">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="案件名・顧客名・住所で検索"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(v) => setStatusFilter(v ?? "all")}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="ステータス" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全ステータス</SelectItem>
+                    {statusOptions.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select
+                  value={typeFilter}
+                  onValueChange={(v) => setTypeFilter(v ?? "all")}
+                >
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="工事種別" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全工事種別</SelectItem>
+                    {typeOptions.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <GridTable>
+                <GridHead>
+                  <GridHeaderCell sortKey="code" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                    コード
+                  </GridHeaderCell>
+                  <GridHeaderCell sortKey="name" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                    案件名
+                  </GridHeaderCell>
+                  <GridHeaderCell sortKey="customer" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                    顧客
+                  </GridHeaderCell>
+                  <GridHeaderCell align="center">種別</GridHeaderCell>
+                  <GridHeaderCell sortKey="priority" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="center">
+                    優先度
+                  </GridHeaderCell>
+                  <GridHeaderCell sortKey="status" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="center">
+                    ステータス
+                  </GridHeaderCell>
+                  <GridHeaderCell sortKey="progress" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                    進捗
+                  </GridHeaderCell>
+                  <GridHeaderCell sortKey="budget" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="right">
+                    予算
+                  </GridHeaderCell>
+                  <GridHeaderCell sortKey="floorArea" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort} align="right">
+                    延床面積
+                  </GridHeaderCell>
+                  <GridHeaderCell sortKey="contractDate" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                    契約日
+                  </GridHeaderCell>
+                  <GridHeaderCell sortKey="assignee" activeSortKey={sortKey} sortDirection={sortDir} onSort={handleSort}>
+                    担当
+                  </GridHeaderCell>
+                </GridHead>
+                <GridBody>
+                  {filtered.map((p) => {
+                    const assignee = getStaff(p.assigneeId);
+                    return (
+                      <GridRow key={p.id} onClick={() => router.push(`/projects/${p.id}`)}>
+                        <GridCell className="font-mono text-xs text-muted-foreground">
+                          {p.projectCode}
+                        </GridCell>
+                        <GridCell className="font-medium text-foreground">
+                          {p.name}
+                          <p className="text-xs font-normal text-muted-foreground">
+                            {p.postalCode} {p.address}
+                          </p>
+                        </GridCell>
+                        <GridCell>{customerNameOf(p.customerId)}</GridCell>
+                        <GridCell align="center">
+                          <Badge variant="outline">{p.constructionType}</Badge>
+                        </GridCell>
+                        <GridCell align="center">
+                          <Badge className={priorityColor[p.priority]} variant="outline">
+                            {p.priority}
+                          </Badge>
+                        </GridCell>
+                        <GridCell align="center">
+                          <Badge className={statusColor[p.status]} variant="outline">
+                            {p.status}
+                          </Badge>
+                        </GridCell>
+                        <GridCell className="w-32">
+                          <div className="flex items-center gap-2">
+                            <Progress value={p.progress} className="h-1.5" />
+                            <span className="text-xs text-muted-foreground">
+                              {p.progress}%
+                            </span>
+                          </div>
+                        </GridCell>
+                        <GridCell align="right">{formatCurrency(p.budget)}</GridCell>
+                        <GridCell align="right">{p.floorAreaSqm.toFixed(1)}m²</GridCell>
+                        <GridCell>{p.contractDate}</GridCell>
+                        <GridCell>{assignee?.name}</GridCell>
+                      </GridRow>
+                    );
+                  })}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={11} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
+                        該当する案件がありません
+                      </td>
+                    </tr>
+                  )}
+                </GridBody>
+              </GridTable>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="board">
+          <Card>
+            <CardHeader>
+              <CardTitle>案件ボード</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                カルテ(案件カード)をドラッグしてステータスを変更できます
+              </p>
+            </CardHeader>
+            <CardContent>
+              <KanbanBoard projects={projects} customers={customers} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

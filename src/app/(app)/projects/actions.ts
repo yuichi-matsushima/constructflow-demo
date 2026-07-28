@@ -78,3 +78,11 @@ export async function updateProject(id: string, input: ProjectUpdateInput) {
     .where(eq(projects.id, id));
   revalidateProjectPaths(id);
 }
+
+const statusSchema = z.enum(["商談中", "契約済み", "設計中", "施工中", "完了"]);
+
+export async function updateProjectStatus(id: string, status: z.infer<typeof statusSchema>) {
+  const data = statusSchema.parse(status);
+  await getDb().update(projects).set({ status: data }).where(eq(projects.id, id));
+  revalidateProjectPaths(id);
+}
