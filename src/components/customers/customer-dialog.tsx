@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil } from "lucide-react";
+import { AlertCircle, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -52,11 +52,13 @@ export function CustomerDialog({ customer }: { customer?: Customer }) {
   const isEdit = Boolean(customer);
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(buildForm(customer));
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     setForm(buildForm(customer));
+    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,6 +68,7 @@ export function CustomerDialog({ customer }: { customer?: Customer }) {
       contactPerson: form.contactPerson || undefined,
     };
     setPending(true);
+    setError(null);
     try {
       if (isEdit && customer) {
         await updateCustomer(customer.id, payload);
@@ -74,6 +77,10 @@ export function CustomerDialog({ customer }: { customer?: Customer }) {
       }
       setOpen(false);
       router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "保存中にエラーが発生しました"
+      );
     } finally {
       setPending(false);
     }
@@ -212,6 +219,13 @@ export function CustomerDialog({ customer }: { customer?: Customer }) {
               </div>
             )}
           </div>
+
+          {error && (
+            <p className="flex items-center gap-1.5 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </p>
+          )}
 
           <DialogFooter>
             <Button type="submit" disabled={pending}>

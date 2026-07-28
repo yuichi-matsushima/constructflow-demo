@@ -23,3 +23,26 @@ export function today(): string {
 export function yearOf(dateStr: string): number {
   return new Date(dateStr).getFullYear();
 }
+
+function isUniqueViolation(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false;
+  const code = (err as { code?: unknown; cause?: { code?: unknown } }).code
+    ?? (err as { cause?: { code?: unknown } }).cause?.code;
+  return code === "23505";
+}
+
+export async function withUniqueRetry<T>(
+  attempt: () => Promise<T>,
+  retries = 3
+): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await attempt();
+    } catch (err) {
+      if (!isUniqueViolation(err)) throw err;
+      lastError = err;
+    }
+  }
+  throw lastError;
+}

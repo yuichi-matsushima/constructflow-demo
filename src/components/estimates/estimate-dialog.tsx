@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil } from "lucide-react";
+import { AlertCircle, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,11 +50,13 @@ export function EstimateDialog({
   const isEdit = Boolean(estimate);
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(buildForm(estimate, defaultProjectId));
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     setForm(buildForm(estimate, defaultProjectId));
+    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,6 +72,7 @@ export function EstimateDialog({
       taxIncluded: true,
     };
     setPending(true);
+    setError(null);
     try {
       if (isEdit && estimate) {
         await updateEstimate(estimate.id, payload);
@@ -78,6 +81,10 @@ export function EstimateDialog({
       }
       setOpen(false);
       router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "保存中にエラーが発生しました"
+      );
     } finally {
       setPending(false);
     }
@@ -191,6 +198,13 @@ export function EstimateDialog({
               />
             </div>
           </div>
+
+          {error && (
+            <p className="flex items-center gap-1.5 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </p>
+          )}
 
           <DialogFooter>
             <Button type="submit" disabled={!form.projectId || pending}>

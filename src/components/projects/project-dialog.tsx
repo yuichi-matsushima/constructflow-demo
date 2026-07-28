@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Pencil } from "lucide-react";
+import { AlertCircle, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -79,11 +79,13 @@ export function ProjectDialog({
   const isEdit = Boolean(project);
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(buildForm(project));
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     setForm(buildForm(project));
+    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,6 +109,7 @@ export function ProjectDialog({
       remarks: form.remarks || undefined,
     };
     setPending(true);
+    setError(null);
     try {
       if (isEdit && project) {
         await updateProject(project.id, {
@@ -118,6 +121,10 @@ export function ProjectDialog({
       }
       setOpen(false);
       router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "保存中にエラーが発生しました"
+      );
     } finally {
       setPending(false);
     }
@@ -409,6 +416,13 @@ export function ProjectDialog({
               />
             </div>
           </div>
+
+          {error && (
+            <p className="flex items-center gap-1.5 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              {error}
+            </p>
+          )}
 
           <DialogFooter>
             <Button type="submit" disabled={pending}>
