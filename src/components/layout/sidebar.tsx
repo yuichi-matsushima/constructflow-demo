@@ -26,10 +26,10 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="hidden w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground md:flex">
+    <aside className="hidden w-60 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground md:flex">
       <div className="flex h-16 items-center gap-2 px-5">
-        <HardHat className="h-6 w-6 text-sidebar-primary" />
-        <span className="font-heading text-lg font-semibold tracking-tight">
+        <HardHat className="h-6 w-6 text-primary" />
+        <span className="text-lg font-semibold tracking-tight">
           ConstructFlow
         </span>
       </div>
@@ -47,8 +47,8 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
             >
               <Icon className="h-4 w-4" />
@@ -57,7 +57,7 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="px-5 py-4 text-xs text-sidebar-foreground/60">
+      <div className="px-5 py-4 text-xs text-muted-foreground">
         デモ環境 / サンプルデータ表示中
       </div>
     </aside>

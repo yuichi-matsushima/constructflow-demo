@@ -37,14 +37,6 @@ const statusBarColor: Record<ProjectStatus, string> = {
   施工中: "bg-orange-500",
   完了: "bg-emerald-500",
 };
-const statusTrackColor: Record<ProjectStatus, string> = {
-  商談中: "bg-slate-100 dark:bg-slate-900",
-  契約済み: "bg-blue-50 dark:bg-blue-950",
-  設計中: "bg-amber-50 dark:bg-amber-950",
-  施工中: "bg-orange-50 dark:bg-orange-950",
-  完了: "bg-emerald-50 dark:bg-emerald-950",
-};
-
 function toDays(dateStr: string) {
   return new Date(dateStr).getTime() / (1000 * 60 * 60 * 24);
 }
@@ -250,7 +242,7 @@ export function ScheduleGantt({
                   const start = toDays(p.startDate);
                   const end = toDays(p.endDate);
                   const left = pctOf(start);
-                  const width = Math.max(((end - start) / totalSpan) * 100, 1.2);
+                  const width = Math.max(((end - start) / totalSpan) * 100, 2);
                   return (
                     <Fragment key={p.id}>
                       <Link
@@ -264,16 +256,15 @@ export function ScheduleGantt({
                           {customerNameOf(p.customerId)}
                         </span>
                       </Link>
-                      <div className="relative flex items-center py-1">
+                      <div className="relative flex items-center py-1.5">
                         <div
                           title={`${p.name}: ${p.startDate} 〜 ${p.endDate}(進捗${p.progress}%)`}
-                          className={`absolute top-0 h-6 rounded-md ${statusTrackColor[p.status]}`}
+                          className={`absolute top-0 h-7 rounded-md shadow-sm ${statusBarColor[p.status]}`}
                           style={{ left: `${left}%`, width: `${width}%` }}
                         >
-                          <div
-                            className={`h-full rounded-md ${statusBarColor[p.status]}`}
-                            style={{ width: `${p.status === "完了" ? 100 : p.progress}%` }}
-                          />
+                          <span className="flex h-full items-center justify-end px-1.5 text-[10px] font-medium text-white/90">
+                            {p.status !== "完了" && `${p.progress}%`}
+                          </span>
                         </div>
                       </div>
                     </Fragment>
