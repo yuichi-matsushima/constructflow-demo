@@ -27,6 +27,7 @@ import {
   GridTable,
 } from "@/components/data-grid/grid-table";
 import { EstimateDialog } from "@/components/estimates/estimate-dialog";
+import { EstimatePdfButton } from "@/components/estimates/estimate-pdf-button";
 import {
   Customer,
   Estimate,
@@ -219,7 +220,15 @@ export function EstimatesTable({
                     <GridCell>{e.createdAt}</GridCell>
                     <GridCell>{e.validUntil}</GridCell>
                     <GridCell align="center" className="border-r-0">
-                      <div onClick={(evt) => evt.stopPropagation()}>
+                      <div
+                        className="flex items-center justify-center gap-1"
+                        onClick={(evt) => evt.stopPropagation()}
+                      >
+                        <EstimatePdfButton
+                          estimate={e}
+                          project={project}
+                          customer={customer}
+                        />
                         <EstimateDialog estimate={e} projects={projects} />
                       </div>
                     </GridCell>
