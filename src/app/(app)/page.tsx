@@ -52,7 +52,7 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">ダッシュボード</h1>
+        <h1 className="text-2xl font-bold tracking-tight font-heading">ダッシュボード</h1>
         <p className="text-sm text-muted-foreground">
           全案件のサマリーです(サンプルデータ)
         </p>

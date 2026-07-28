@@ -472,7 +472,7 @@ export function formatCurrency(amount: number): string {
 }
 
 export const statusColor: Record<ProjectStatus, string> = {
-  商談中: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+  商談中: "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-200",
   契約済み: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200",
   設計中: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200",
   施工中: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200",
@@ -480,7 +480,7 @@ export const statusColor: Record<ProjectStatus, string> = {
 };
 
 export const estimateStatusColor: Record<EstimateStatus, string> = {
-  作成中: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+  作成中: "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-200",
   提出済み: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200",
   承認: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200",
   却下: "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-200",
@@ -489,11 +489,11 @@ export const estimateStatusColor: Record<EstimateStatus, string> = {
 export const priorityColor: Record<ProjectPriority, string> = {
   高: "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-200",
   中: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200",
-  低: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+  低: "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-200",
 };
 
 export const paymentStatusColor: Record<PaymentStatus, string> = {
-  未請求: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+  未請求: "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-200",
   一部入金: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-200",
   入金済み: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-200",
 };

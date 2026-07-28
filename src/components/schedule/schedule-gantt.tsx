@@ -130,7 +130,7 @@ export function ScheduleGantt({
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">スケジュール</h1>
+        <h1 className="text-2xl font-bold tracking-tight font-heading">スケジュール</h1>
         <p className="text-sm text-muted-foreground">
           全案件の工程スケジュール(サンプルデータ)
         </p>

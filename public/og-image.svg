@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#1c1917"/>
+  <rect width="1200" height="630" fill="url(#grad)"/>
+  <g opacity="0.5" stroke="#44403c" stroke-width="1">
+    <line x1="0" y1="150" x2="1200" y2="150"/>
+    <line x1="0" y1="300" x2="1200" y2="300"/>
+    <line x1="0" y1="450" x2="1200" y2="450"/>
+  </g>
+  <g transform="translate(120,190)">
+    <path d="M0 165 76 0l76 165" stroke="#f5f5f4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20 165V90h112v75" stroke="#fbbf24" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M-14 165h180" stroke="#f5f5f4" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="330" y="290" font-family="Georgia, 'Noto Serif JP', serif" font-size="72" fill="#fafaf9" font-weight="600">ConstructFlow</text>
+  <text x="332" y="345" font-family="'Hiragino Sans', 'Noto Sans JP', sans-serif" font-size="30" fill="#d6d3d1">工務店向け業務管理システム デモ</text>
+  <text x="332" y="395" font-family="'Hiragino Sans', 'Noto Sans JP', sans-serif" font-size="22" fill="#a8a29e">DB永続化 / Server Actions / AIアシスタント搭載</text>
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1c1917"/>
+      <stop offset="1" stop-color="#292524"/>
+    </linearGradient>
+  </defs>
+</svg>

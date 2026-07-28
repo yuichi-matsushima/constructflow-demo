@@ -109,7 +109,7 @@ export function CustomersTable({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">顧客管理</h1>
+          <h1 className="text-2xl font-bold tracking-tight font-heading">顧客管理</h1>
           <p className="text-sm text-muted-foreground">
             全{customers.length}件中 {filtered.length}件表示(サンプルデータ)
           </p>
