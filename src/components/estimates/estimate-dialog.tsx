@@ -74,17 +74,17 @@ export function EstimateDialog({
     setPending(true);
     setError(null);
     try {
-      if (isEdit && estimate) {
-        await updateEstimate(estimate.id, payload);
-      } else {
-        await createEstimate(payload);
+      const result = isEdit && estimate
+        ? await updateEstimate(estimate.id, payload)
+        : await createEstimate(payload);
+      if (!result.ok) {
+        setError(result.error);
+        return;
       }
       setOpen(false);
       router.refresh();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "保存中にエラーが発生しました"
-      );
+    } catch {
+      setError("保存中にエラーが発生しました");
     } finally {
       setPending(false);
     }

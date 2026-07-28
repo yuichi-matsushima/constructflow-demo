@@ -111,20 +111,20 @@ export function ProjectDialog({
     setPending(true);
     setError(null);
     try {
-      if (isEdit && project) {
-        await updateProject(project.id, {
-          ...payload,
-          progress: Number(form.progress) || 0,
-        });
-      } else {
-        await createProject(payload);
+      const result = isEdit && project
+        ? await updateProject(project.id, {
+            ...payload,
+            progress: Number(form.progress) || 0,
+          })
+        : await createProject(payload);
+      if (!result.ok) {
+        setError(result.error);
+        return;
       }
       setOpen(false);
       router.refresh();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "保存中にエラーが発生しました"
-      );
+    } catch {
+      setError("保存中にエラーが発生しました");
     } finally {
       setPending(false);
     }

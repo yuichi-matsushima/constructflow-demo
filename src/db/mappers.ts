@@ -10,5 +10,9 @@ export function toProject(row: ProjectRow): Project {
 }
 
 export function toEstimate(row: EstimateRow): Estimate {
-  return row;
+  return {
+    ...row,
+    sentAt: row.sentAt ?? undefined,
+    sentTo: row.sentTo ?? undefined,
+  };
 }

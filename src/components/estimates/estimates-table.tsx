@@ -28,6 +28,8 @@ import {
 } from "@/components/data-grid/grid-table";
 import { EstimateDialog } from "@/components/estimates/estimate-dialog";
 import { EstimatePdfButton } from "@/components/estimates/estimate-pdf-button";
+import { EstimateEmailDialog } from "@/components/estimates/estimate-email-dialog";
+import { Send } from "lucide-react";
 import {
   Customer,
   Estimate,
@@ -196,6 +198,7 @@ export function EstimatesTable({
                 作成日
               </GridHeaderCell>
               <GridHeaderCell>有効期限</GridHeaderCell>
+              <GridHeaderCell align="center">送信状況</GridHeaderCell>
               <GridHeaderCell align="center">操作</GridHeaderCell>
             </GridHead>
             <GridBody>
@@ -219,6 +222,24 @@ export function EstimatesTable({
                     </GridCell>
                     <GridCell>{e.createdAt}</GridCell>
                     <GridCell>{e.validUntil}</GridCell>
+                    <GridCell align="center">
+                      {e.sentAt ? (
+                        <div className="flex flex-col items-center gap-0.5">
+                          <Badge
+                            variant="outline"
+                            className="gap-1 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                          >
+                            <Send className="h-3 w-3" />
+                            送信済み
+                          </Badge>
+                          <span className="text-[10px] text-muted-foreground">
+                            {e.sentAt.slice(0, 10)}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">未送信</span>
+                      )}
+                    </GridCell>
                     <GridCell align="center" className="border-r-0">
                       <div
                         className="flex items-center justify-center gap-1"
@@ -229,6 +250,7 @@ export function EstimatesTable({
                           project={project}
                           customer={customer}
                         />
+                        <EstimateEmailDialog estimate={e} customer={customer} />
                         <EstimateDialog estimate={e} projects={projects} />
                       </div>
                     </GridCell>
@@ -237,7 +259,7 @@ export function EstimatesTable({
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={11} className="px-2.5 py-8 text-center text-sm text-muted-foreground">
                     該当する見積もりがありません
                   </td>
                 </tr>

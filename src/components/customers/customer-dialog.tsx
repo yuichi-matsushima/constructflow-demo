@@ -70,17 +70,17 @@ export function CustomerDialog({ customer }: { customer?: Customer }) {
     setPending(true);
     setError(null);
     try {
-      if (isEdit && customer) {
-        await updateCustomer(customer.id, payload);
-      } else {
-        await createCustomer(payload);
+      const result = isEdit && customer
+        ? await updateCustomer(customer.id, payload)
+        : await createCustomer(payload);
+      if (!result.ok) {
+        setError(result.error);
+        return;
       }
       setOpen(false);
       router.refresh();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "保存中にエラーが発生しました"
-      );
+    } catch {
+      setError("保存中にエラーが発生しました");
     } finally {
       setPending(false);
     }

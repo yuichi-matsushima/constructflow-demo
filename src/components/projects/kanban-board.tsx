@@ -203,9 +203,13 @@ export function KanbanBoard({
       prev.map((p) => (p.id === projectId ? { ...p, status: newStatus } : p))
     );
     startTransition(() => {
-      updateProjectStatus(projectId, newStatus).catch(() => {
-        setItems(previous);
-      });
+      updateProjectStatus(projectId, newStatus)
+        .then((result) => {
+          if (!result.ok) setItems(previous);
+        })
+        .catch(() => {
+          setItems(previous);
+        });
     });
   };
 

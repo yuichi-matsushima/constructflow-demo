@@ -74,6 +74,8 @@ export const estimates = pgTable("estimates", {
   createdAt: text("created_at").notNull(),
   validUntil: text("valid_until").notNull(),
   title: text("title").notNull(),
+  sentAt: text("sent_at"),
+  sentTo: text("sent_to"),
 });
 
 export type CustomerRow = typeof customers.$inferSelect;

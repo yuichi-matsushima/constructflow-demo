@@ -85,6 +85,8 @@ export interface Estimate {
   createdAt: string;
   validUntil: string;
   title: string;
+  sentAt?: string;
+  sentTo?: string;
 }
 
 export interface ActivityItem {
