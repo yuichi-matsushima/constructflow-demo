@@ -12,9 +12,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://constructflow-demo.vercel.app";
+const title = "ConstructFlow | 工務店向け業務管理デモ";
+const description =
+  "工務店向け業務管理システムのポートフォリオデモ。顧客・案件・見積のDB永続化、Kanbanボード、AIチャットアシスタントを実装(架空データ)。";
+
 export const metadata: Metadata = {
-  title: "ConstructFlow | 工務店向け業務管理デモ",
-  description: "工務店向け業務管理システムのポートフォリオデモ(架空データ)",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  icons: {
+    icon: "/favicon.svg",
+  },
+  openGraph: {
+    title,
+    description,
+    url: siteUrl,
+    siteName: "ConstructFlow",
+    locale: "ja_JP",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.svg",
+        width: 1200,
+        height: 630,
+        alt: "ConstructFlow - 工務店向け業務管理デモ",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
