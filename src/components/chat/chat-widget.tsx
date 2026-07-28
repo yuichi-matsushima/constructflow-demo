@@ -18,7 +18,7 @@ const initialMessages: ChatMessage[] = [
   {
     id: 0,
     role: "bot",
-    text: "こんにちは!ConstructFlow AIアシスタントです。\n案件・顧客・見積など、このシステムの使い方についてお気軽にご質問ください。",
+    text: "こんにちは!ConstructFlow AIアシスタントです。\n案件・顧客・見積・スケジュールなど、このシステムの使い方についてお気軽にご質問ください。",
   },
 ];
 

@@ -7,6 +7,7 @@ import {
   Building2,
   Users,
   FileText,
+  CalendarDays,
   HardHat,
   UserSquare2,
 } from "lucide-react";
@@ -17,6 +18,7 @@ const navItems = [
   { href: "/projects", label: "案件管理", icon: Building2 },
   { href: "/customers", label: "顧客管理", icon: Users },
   { href: "/estimates", label: "見積もり", icon: FileText },
+  { href: "/schedule", label: "スケジュール", icon: CalendarDays },
   { href: "/staff", label: "スタッフ管理", icon: UserSquare2 },
 ];
 
