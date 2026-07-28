@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db/client";
 import { estimates, projects } from "@/db/schema";
-import { nextCode, nextId, today, yearOf } from "@/lib/codes";
+import { nextCode, nextId, today, withUniqueRetry, yearOf } from "@/lib/codes";
 
 const estimateSchema = z.object({
   projectId: z.string().min(1),
@@ -39,23 +39,28 @@ export async function createEstimate(input: EstimateInput) {
   const data = estimateSchema.parse(input);
   const db = getDb();
   const customerId = await customerIdOfProject(data.projectId);
-  const rows = await db
-    .select({ id: estimates.id, estimateCode: estimates.estimateCode })
-    .from(estimates);
   const createdAt = today();
-  const id = nextId("es", rows.map((r) => r.id));
-  const estimateCode = nextCode(
-    "Q",
-    yearOf(createdAt),
-    rows.map((r) => r.estimateCode)
-  );
-  await db.insert(estimates).values({
-    ...data,
-    customerId,
-    id,
-    estimateCode,
-    createdAt,
+
+  const { id, estimateCode } = await withUniqueRetry(async () => {
+    const rows = await db
+      .select({ id: estimates.id, estimateCode: estimates.estimateCode })
+      .from(estimates);
+    const id = nextId("es", rows.map((r) => r.id));
+    const estimateCode = nextCode(
+      "Q",
+      yearOf(createdAt),
+      rows.map((r) => r.estimateCode)
+    );
+    await db.insert(estimates).values({
+      ...data,
+      customerId,
+      id,
+      estimateCode,
+      createdAt,
+    });
+    return { id, estimateCode };
   });
+
   revalidateEstimatePaths(data.projectId, customerId);
   return { id, estimateCode };
 }
@@ -63,9 +68,13 @@ export async function createEstimate(input: EstimateInput) {
 export async function updateEstimate(id: string, input: EstimateInput) {
   const data = estimateSchema.parse(input);
   const customerId = await customerIdOfProject(data.projectId);
-  await getDb()
+  const result = await getDb()
     .update(estimates)
     .set({ ...data, customerId })
-    .where(eq(estimates.id, id));
+    .where(eq(estimates.id, id))
+    .returning({ id: estimates.id });
+  if (result.length === 0) {
+    throw new Error("指定された見積もりが見つかりません");
+  }
   revalidateEstimatePaths(data.projectId, customerId);
 }

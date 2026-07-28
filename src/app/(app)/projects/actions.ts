@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db/client";
 import { projects } from "@/db/schema";
-import { nextCode, nextId, yearOf } from "@/lib/codes";
+import { nextCode, nextId, withUniqueRetry, yearOf } from "@/lib/codes";
 
 const projectSchema = z.object({
   name: z.string().min(1),
@@ -44,38 +44,47 @@ function revalidateProjectPaths(id: string) {
 export async function createProject(input: ProjectInput) {
   const data = projectSchema.parse(input);
   const db = getDb();
-  const rows = await db
-    .select({ id: projects.id, projectCode: projects.projectCode })
-    .from(projects);
-  const id = nextId("pj", rows.map((r) => r.id));
-  const projectCode = nextCode(
-    "P",
-    yearOf(data.contractDate),
-    rows.map((r) => r.projectCode)
-  );
-  await db.insert(projects).values({
-    ...data,
-    remarks: data.remarks ?? null,
-    id,
-    projectCode,
-    progress: 0,
-    phases: [
-      { name: "契約", start: data.contractDate, end: data.contractDate, done: true },
-      { name: "設計", start: data.startDate, end: data.startDate, done: false },
-      { name: "着工", start: data.startDate, end: data.startDate, done: false },
-      { name: "引き渡し", start: data.endDate, end: data.endDate, done: false },
-    ],
+
+  const { id, projectCode } = await withUniqueRetry(async () => {
+    const rows = await db
+      .select({ id: projects.id, projectCode: projects.projectCode })
+      .from(projects);
+    const id = nextId("pj", rows.map((r) => r.id));
+    const projectCode = nextCode(
+      "P",
+      yearOf(data.contractDate),
+      rows.map((r) => r.projectCode)
+    );
+    await db.insert(projects).values({
+      ...data,
+      remarks: data.remarks ?? null,
+      id,
+      projectCode,
+      progress: 0,
+      phases: [
+        { name: "契約", start: data.contractDate, end: data.contractDate, done: true },
+        { name: "設計", start: data.startDate, end: data.startDate, done: false },
+        { name: "着工", start: data.startDate, end: data.startDate, done: false },
+        { name: "引き渡し", start: data.endDate, end: data.endDate, done: false },
+      ],
+    });
+    return { id, projectCode };
   });
+
   revalidateProjectPaths(id);
   return { id, projectCode };
 }
 
 export async function updateProject(id: string, input: ProjectUpdateInput) {
   const data = projectUpdateSchema.parse(input);
-  await getDb()
+  const result = await getDb()
     .update(projects)
     .set({ ...data, remarks: data.remarks ?? null })
-    .where(eq(projects.id, id));
+    .where(eq(projects.id, id))
+    .returning({ id: projects.id });
+  if (result.length === 0) {
+    throw new Error("指定された案件が見つかりません");
+  }
   revalidateProjectPaths(id);
 }
 
@@ -83,6 +92,13 @@ const statusSchema = z.enum(["商談中", "契約済み", "設計中", "施工�
 
 export async function updateProjectStatus(id: string, status: z.infer<typeof statusSchema>) {
   const data = statusSchema.parse(status);
-  await getDb().update(projects).set({ status: data }).where(eq(projects.id, id));
+  const result = await getDb()
+    .update(projects)
+    .set({ status: data })
+    .where(eq(projects.id, id))
+    .returning({ id: projects.id });
+  if (result.length === 0) {
+    throw new Error("指定された案件が見つかりません");
+  }
   revalidateProjectPaths(id);
 }

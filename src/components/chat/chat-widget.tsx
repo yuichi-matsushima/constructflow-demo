@@ -69,12 +69,24 @@ export function ChatWidget() {
       { id: nextIdRef.current++, role: "user", text },
     ]);
     setIsTyping(true);
-    const reply = await getBotReply(text);
-    setMessages((prev) => [
-      ...prev,
-      { id: nextIdRef.current++, role: "bot", text: reply },
-    ]);
-    setIsTyping(false);
+    try {
+      const reply = await getBotReply(text);
+      setMessages((prev) => [
+        ...prev,
+        { id: nextIdRef.current++, role: "bot", text: reply },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: nextIdRef.current++,
+          role: "bot",
+          text: "すみません、応答の取得に失敗しました。もう一度お試しください。",
+        },
+      ]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   return (

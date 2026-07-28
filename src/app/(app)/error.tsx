@@ -26,7 +26,7 @@ export default function Error({
           エラーが発生しました
         </h1>
         <p className="max-w-md text-sm text-muted-foreground">
-          データの読み込みまたは処理中に問題が発生しました。時間をおいて再度お試しください。
+          {error.message || "データの読み込みまたは処理中に問題が発生しました。時間をおいて再度お試しください。"}
         </p>
         {error.digest && (
           <p className="mt-1 font-mono text-xs text-muted-foreground">
